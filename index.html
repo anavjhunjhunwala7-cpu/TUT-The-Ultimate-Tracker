@@ -6,25 +6,24 @@
     <title>ULTIMATE TRACKER PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --neon: #22c55e; --bg: #050505; --glass: rgba(22, 22, 25, 0.8); }
+        :root { --neon: #22c55e; --bg: #050505; --glass: rgba(22, 22, 25, 0.85); }
         body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
         
         .sticky-header {
             position: sticky; top: 0; z-index: 100;
-            background: linear-gradient(to bottom, #050505 80%, transparent);
+            background: linear-gradient(to bottom, #050505 85%, transparent);
             backdrop-filter: blur(15px); padding: 20px 0 30px;
         }
 
         .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; }
 
-        /* CALENDAR GRID */
         .cal-flex { display: flex; flex-wrap: wrap; width: 100%; }
         .cal-day { 
             flex: 0 0 14.28%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
-            font-size: 0.75rem; font-weight: 800; border-radius: 8px; transition: 0.2s;
+            font-size: 0.75rem; font-weight: 900; border-radius: 8px; color: #fff !important; /* Force White Text */
         }
-        .day-pass { background: rgba(34, 197, 94, 0.2) !important; color: var(--neon); border: 1px solid var(--neon); }
-        .day-fail { background: rgba(239, 68, 68, 0.15) !important; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .day-pass { background: rgba(34, 197, 94, 0.6) !important; border: 1px solid var(--neon); }
+        .day-fail { background: rgba(239, 68, 68, 0.5) !important; border: 1px solid #ef4444; }
 
         .w-btn { padding: 12px; border-radius: 12px; border: 1px solid #333; font-size: 11px; font-weight: 800; text-align: center; text-transform: uppercase; }
         .w-btn.selected { background: var(--neon); color: #000; border-color: var(--neon); }
@@ -48,29 +47,33 @@
                     <div class="w-16 h-16 rounded-full border border-zinc-800 flex items-center justify-center bg-black">
                         <span id="score-val" class="text-lg font-black text-green-400">0%</span>
                     </div>
-                    <span class="text-[7px] font-black text-zinc-600 mt-1 uppercase tracking-widest">Score</span>
+                    <span class="text-[7px] font-black text-zinc-600 mt-1 uppercase tracking-widest">Power</span>
                 </div>
                 <div class="flex flex-col items-center">
                     <div class="w-16 h-16 rounded-full border border-zinc-800 flex items-center justify-center bg-black">
                         <span id="days-complete" class="text-lg font-black text-white">1</span>
                     </div>
-                    <span class="text-[7px] font-black text-zinc-600 mt-1 uppercase tracking-widest">Days Logged</span>
+                    <span class="text-[7px] font-black text-zinc-600 mt-1 uppercase tracking-widest">Streak</span>
                 </div>
             </div>
 
-            <button onclick="openCalendar('jump')" class="mt-4 text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 mx-auto">
-                <span id="log-date-display"></span> <span class="text-green-500">▼</span>
-            </button>
+            <div class="flex items-center justify-center gap-6 mt-6">
+                <button onclick="shiftDay(-1)" class="text-zinc-500 text-xl font-black active:scale-90">◄</button>
+                <button onclick="openCalendar()" class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                    <span id="log-date-display"></span> <span class="text-green-500 text-[8px]">▼</span>
+                </button>
+                <button onclick="shiftDay(1)" class="text-zinc-500 text-xl font-black active:scale-90">►</button>
+            </div>
         </div>
 
         <div id="log-list" class="p-4 space-y-6"></div>
-        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400">Save Progress</button></div>
+        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400">Lock Session</button></div>
     </div>
 
     <div id="v-stats" class="hidden p-4 space-y-6">
         <div class="flex flex-col items-center py-6 gap-4">
             <button onclick="openPeriodPicker()" class="glass px-8 py-3 text-[10px] font-black text-green-400 uppercase tracking-widest">
-                <span id="active-period">Lifetime</span> ▼
+                Range: <span id="active-period">Lifetime</span> ▼
             </button>
             <div id="custom-date-row" class="hidden flex gap-2 items-center">
                 <input type="date" id="range-start" onchange="runStats()" class="text-[9px]">
@@ -79,42 +82,26 @@
             </div>
         </div>
         
-        <div class="glass p-6">
-            <h3 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Historical Activity</h3>
-            <div id="insights-cal-area"></div>
-        </div>
-
         <div id="stats-grid" class="grid grid-cols-2 gap-3"></div>
     </div>
 
     <div id="work-modal" class="modal">
         <div class="p-6 flex justify-between items-center border-b border-white/5">
-            <button onclick="closeModal('work-modal')" class="text-2xl">←</button>
-            <h3 class="font-black uppercase text-xs">Training Selection</h3>
+            <button onclick="closeModal('work-modal')" class="text-2xl text-zinc-500">←</button>
+            <h3 class="font-black uppercase text-xs">Training</h3>
             <div class="w-8"></div>
         </div>
         <div class="p-6 grid grid-cols-2 gap-3" id="work-options"></div>
         <div class="p-6"><button onclick="closeModal('work-modal')" class="w-full py-4 glass text-green-400 font-black">CONFIRM</button></div>
     </div>
 
-    <div id="detail-modal" class="modal">
-        <div class="p-6 flex justify-between items-center">
-            <button onclick="closeModal('detail-modal')" class="text-2xl">←</button>
-            <h3 id="dt-name" class="font-black italic uppercase text-green-400"></h3>
-            <div class="w-8"></div>
-        </div>
-        <div class="p-6 space-y-6">
-            <div id="dt-cal-area"></div>
-        </div>
-    </div>
-
     <div id="cal-modal" class="modal">
         <div class="p-6 flex justify-between items-center">
-            <button onclick="closeModal('cal-modal')" class="text-2xl">←</button>
+            <button onclick="closeModal('cal-modal')" class="text-2xl text-zinc-500">←</button>
             <div class="flex items-center gap-4">
-                <button onclick="changeCal(-1)" class="text-zinc-500">◄</button>
+                <button onclick="changeCal(-1)" class="text-zinc-400 font-bold">◄</button>
                 <span id="cal-title" class="font-black uppercase text-xs"></span>
-                <button onclick="changeCal(1)" class="text-zinc-500">►</button>
+                <button onclick="changeCal(1)" class="text-zinc-400 font-bold">►</button>
             </div>
             <div class="w-8"></div>
         </div>
@@ -122,13 +109,13 @@
     </div>
 
     <div id="period-modal" class="modal">
-        <div class="p-6 border-b border-white/5"><button onclick="closeModal('period-modal')" class="text-2xl">←</button></div>
+        <div class="p-6 border-b border-white/5"><button onclick="closeModal('period-modal')" class="text-2xl text-zinc-500">←</button></div>
         <div class="p-6 space-y-3">
             <button onclick="setPeriod('7')" class="w-full py-4 glass text-xs font-black uppercase">Last 7 Days</button>
             <button onclick="setPeriod('30')" class="w-full py-4 glass text-xs font-black uppercase">Last 30 Days</button>
             <button onclick="setPeriod('90')" class="w-full py-4 glass text-xs font-black uppercase">Last 3 Months</button>
             <button onclick="setPeriod('all')" class="w-full py-4 glass text-xs font-black uppercase">Lifetime</button>
-            <button onclick="setPeriod('custom')" class="w-full py-4 glass text-xs font-black uppercase border-dashed border-zinc-700">Custom Range</button>
+            <button onclick="setPeriod('custom')" class="w-full py-4 glass text-xs font-black uppercase">Custom Range</button>
         </div>
     </div>
 
@@ -138,14 +125,14 @@
     </nav>
 
     <script>
-        const quotes = ["DISCIPLINE IS FREEDOM", "CONSISTENCY OVER EVERYTHING", "WIN THE MORNING", "STAY HUNGRY"];
+        const quotes = ["DISCIPLINE IS FREEDOM", "ONE MORE REP", "CONSISTENCY WINS", "WIN THE MORNING"];
         const workOptions = ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Walk", "Run", "Other"];
         const fullSchema = [
-            { id: 'm_push', label: 'Morning Pushups', type: 'sel', range: [0,150,5], cat: 'Morning Rituals' },
-            { id: 'm_squat', label: 'Morning Squats', type: 'sel', range: [0,150,5], cat: 'Morning Rituals' },
-            { id: 'neeti', label: 'Jal Neeti', type: 'chk', cat: 'Morning Rituals' },
-            { id: 'floss', label: 'Flossing', type: 'chk', cat: 'Morning Rituals' },
-            { id: 'mouth', label: 'Mouth Taping', type: 'chk', cat: 'Morning Rituals' },
+            { id: 'm_push', label: 'Morning Pushups', type: 'sel', range: [0,150,5], cat: 'Rituals' },
+            { id: 'm_squat', label: 'Morning Squats', type: 'sel', range: [0,150,5], cat: 'Rituals' },
+            { id: 'neeti', label: 'Jal Neeti', type: 'chk', cat: 'Rituals' },
+            { id: 'floss', label: 'Flossing', type: 'chk', cat: 'Rituals' },
+            { id: 'mouth', label: 'Mouth Taping', type: 'chk', cat: 'Rituals' },
             { id: 'med', label: 'Meditation', type: 'num', ph: 'Type Here', cat: 'Mental' },
             { id: 'hanuman', label: 'Hanuman Chalisa', type: 'chk', cat: 'Mental' },
             { id: 'news', label: 'Newspaper', type: 'chk', cat: 'Mental' },
@@ -164,7 +151,7 @@
             { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('ultra_v14')) || {};
+        let db = JSON.parse(localStorage.getItem('ultra_v15')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
         let statPeriod = 'all';
@@ -188,13 +175,13 @@
                     const val = d[s.id+'_v'] || '';
 
                     html += `<div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4" onclick="openHabit('${s.id}')">
-                            <div onclick="event.stopPropagation(); toggle('${s.id}')" class="w-6 h-6 border-2 border-zinc-700 rounded-md ${chk?'bg-green-500 border-green-500':''}"></div>
+                        <div class="flex items-center gap-4">
+                            <div onclick="toggleCh('${s.id}')" class="w-6 h-6 border-2 border-zinc-700 rounded-md ${chk?'bg-green-500 border-green-500':''}"></div>
                             <span class="text-sm font-bold ${chk?'text-white':'text-zinc-500'}">${s.label}</span>
                         </div>`;
                     
                     if(s.type === 'work') {
-                        html += `<button onclick="openWorkout()" class="text-[10px] font-black text-green-400 border border-green-500/30 px-3 py-2 rounded-lg">${val ? val.replace(/,/g, ' • ') : 'SELECT'}</button>`;
+                        html += `<button onclick="openWorkout()" class="text-[10px] font-black text-green-400 border border-green-500/30 px-3 py-2 rounded-lg uppercase tracking-tighter">${val ? val.replace(/,/g, ' • ') : 'SELECT'}</button>`;
                     } else if(s.type === 'sel') {
                         html += `<select onchange="upd('${s.id}','v',this.value)"><option value="">-</option>`;
                         for(let i=s.range[0]; i<=s.range[1]; i+=s.range[2]) html += `<option value="${i}" ${val==i?'selected':''}>${i}</option>`;
@@ -209,20 +196,27 @@
             updateScore();
         }
 
-        function toggle(id) { if(!db[activeDate]) db[activeDate] = {}; db[activeDate][id+'_c'] = !db[activeDate][id+'_c']; renderLog(); }
+        function toggleCh(id) { if(!db[activeDate]) db[activeDate] = {}; db[activeDate][id+'_c'] = !db[activeDate][id+'_c']; renderLog(); }
         function upd(id, k, v) { if(!db[activeDate]) db[activeDate] = {}; db[activeDate][id+'_'+k] = v; updateScore(); }
         
+        function shiftDay(n) {
+            let d = new Date(activeDate);
+            d.setDate(d.getDate() + n);
+            activeDate = d.toISOString().split('T')[0];
+            renderLog();
+        }
+
         function openWorkout() {
             const area = document.getElementById('work-options'); area.innerHTML = '';
             const cur = (db[activeDate] && db[activeDate]['work_v']) ? db[activeDate]['work_v'].split(',') : [];
             workOptions.forEach(opt => {
                 const isSel = cur.includes(opt);
-                area.innerHTML += `<div onclick="toggleWorkTag('${opt}')" class="w-btn ${isSel?'selected':''}">${opt}</div>`;
+                area.innerHTML += `<div onclick="toggleWork('${opt}')" class="w-btn ${isSel?'selected':''}">${opt}</div>`;
             });
             document.getElementById('work-modal').style.display = 'flex';
         }
 
-        function toggleWorkTag(t) {
+        function toggleWork(t) {
             let tags = (db[activeDate] && db[activeDate]['work_v']) ? db[activeDate]['work_v'].split(',') : [];
             tags = tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t];
             upd('work', 'v', tags.join(',')); openWorkout(); renderLog();
@@ -233,25 +227,19 @@
             let done = fullSchema.filter(s => d[s.id+'_c']).length;
             const pct = Math.round((done/fullSchema.length)*100);
             document.getElementById('score-val').innerText = pct+'%';
-            db[activeDate] = {...db[activeDate], daily_score: pct};
+            db[activeDate].daily_score = pct;
 
             const dates = Object.keys(db).sort();
             if(dates.length > 0) {
-                const start = new Date(dates[0]);
-                const diff = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24)) + 1;
+                const diff = Math.floor((new Date() - new Date(dates[0])) / 86400000) + 1;
                 document.getElementById('days-complete').innerText = diff;
             }
         }
 
         function openCalendar() {
-            renderGenericCal('cal-grid-area', calView, (ds) => jump(ds));
-            document.getElementById('cal-modal').style.display = 'flex';
-        }
-
-        function renderGenericCal(targetId, dateObj, callback) {
-            const area = document.getElementById(targetId); area.innerHTML = '';
-            const y = dateObj.getFullYear(), m = dateObj.getMonth();
-            document.getElementById('cal-title').innerText = new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(dateObj);
+            const area = document.getElementById('cal-grid-area'); area.innerHTML = '';
+            const y = calView.getFullYear(), m = calView.getMonth();
+            document.getElementById('cal-title').innerText = new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(calView);
             let html = `<div class="cal-flex mb-2 text-[10px] text-zinc-600 font-black text-center uppercase">${['S','M','T','W','T','F','S'].map(d=>`<div class="w-[14.2%]">${d}</div>`).join('')}</div><div class="cal-flex">`;
             const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
             for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
@@ -259,64 +247,72 @@
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 const score = (db[ds] && db[ds].daily_score) || 0;
                 let status = score >= 80 ? 'day-pass' : (score > 0 ? 'day-fail' : '');
-                html += `<div onclick="(${callback})('${ds}')" class="cal-day ${status} ${ds===activeDate?'bg-white text-black':''}">${i}</div>`;
+                html += `<div onclick="jump('${ds}')" class="cal-day ${status} ${ds===activeDate?'bg-white text-black':''}">${i}</div>`;
             }
             area.innerHTML = html + '</div>';
+            document.getElementById('cal-modal').style.display = 'flex';
         }
 
-        function openHabit(id) {
-            const s = fullSchema.find(x => x.id === id);
-            document.getElementById('dt-name').innerText = s.label;
-            renderGenericCal('dt-cal-area', new Date(), (ds) => console.log(ds));
-            document.getElementById('detail-modal').style.display = 'flex';
-        }
-
+        function jump(d) { activeDate = d; closeModal('cal-modal'); renderLog(); }
+        function changeCal(n) { calView.setMonth(calView.getMonth() + n); openCalendar(); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
         function tab(t) {
             document.getElementById('v-log').classList.toggle('hidden', t !== 'log');
             document.getElementById('v-stats').classList.toggle('hidden', t !== 'stats');
             document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
             document.getElementById('n-'+t).classList.add('active');
-            if(t === 'stats') runStats();
+            if(t === 'stats') { statPeriod = 'all'; setPeriod('all'); }
         }
 
         function openPeriodPicker() { document.getElementById('period-modal').style.display = 'flex'; }
-        
         function setPeriod(p) { 
             statPeriod = p; 
-            document.getElementById('active-period').innerText = p === 'custom' ? 'Custom Range' : (p === 'all' ? 'Lifetime' : p+' Days');
+            document.getElementById('active-period').innerText = p === 'custom' ? 'Custom' : (p === 'all' ? 'Lifetime' : p+' Days');
             document.getElementById('custom-date-row').classList.toggle('hidden', p !== 'custom');
             closeModal('period-modal'); 
             runStats(); 
         }
 
         function runStats() {
-            renderGenericCal('insights-cal-area', new Date(), (ds) => jump(ds));
             const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
-            let start = 0, end = Infinity;
+            let startDate, endDate = new Date();
+            
             if(statPeriod === 'custom') {
-                start = new Date(document.getElementById('range-start').value || 0).getTime();
-                end = new Date(document.getElementById('range-end').value || '2099-01-01').getTime();
-            } else if (statPeriod !== 'all') {
-                start = new Date().setDate(new Date().getDate() - parseInt(statPeriod));
+                startDate = new Date(document.getElementById('range-start').value || 0);
+                endDate = new Date(document.getElementById('range-end').value || '2099-01-01');
+            } else if (statPeriod === 'all') {
+                const dates = Object.keys(db).sort();
+                startDate = dates.length ? new Date(dates[0]) : new Date();
+            } else {
+                startDate = new Date(); startDate.setDate(startDate.getDate() - parseInt(statPeriod));
             }
 
-            fullSchema.filter(s => s.type !== 'chk').forEach(s => {
+            const totalDays = Math.max(1, Math.floor((endDate - startDate) / 86400000) + 1);
+
+            fullSchema.forEach(s => {
                 let sum = 0, count = 0;
                 Object.keys(db).forEach(d => {
-                    const time = new Date(d).getTime();
-                    if(time >= start && time <= end && db[d][s.id+'_v']) {
-                        sum += parseFloat(db[d][s.id+'_v']); count++;
+                    const dt = new Date(d);
+                    if(dt >= startDate && dt <= endDate) {
+                        if(s.type === 'chk' && db[d][s.id+'_c']) count++;
+                        else if(db[d][s.id+'_v']) { sum += parseFloat(db[d][s.id+'_v']); count++; }
                     }
                 });
-                grid.innerHTML += `<div class="glass p-6 text-center"><p class="text-[8px] font-black text-zinc-600 mb-2">${s.label} AVG</p><p class="text-2xl font-black text-green-400 italic">${count>0?(sum/count).toFixed(1):0}</p></div>`;
+
+                let displayVal = "0";
+                if(s.type === 'chk') displayVal = (count / totalDays).toFixed(2) + "x";
+                else if(count > 0) displayVal = (sum / totalDays).toFixed(1);
+
+                grid.innerHTML += `<div class="glass p-6 text-center">
+                    <p class="text-[8px] font-black text-zinc-600 mb-2 uppercase">${s.label}</p>
+                    <p class="text-2xl font-black text-green-400 italic">${displayVal}</p>
+                    <p class="text-[7px] text-zinc-700 mt-1 uppercase">Avg / Day</p>
+                </div>`;
             });
         }
 
-        function jump(d) { activeDate = d; closeModal('cal-modal'); tab('log'); renderLog(); }
-        function changeCal(n) { calView.setMonth(calView.getMonth() + n); openCalendar(); }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function save() { localStorage.setItem('ultra_v14', JSON.stringify(db)); alert("CHAIN UPDATED."); }
-
+        function save() { localStorage.setItem('ultra_v15', JSON.stringify(db)); alert("COMMITTED."); }
         renderLog();
     </script>
 </body>
