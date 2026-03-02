@@ -17,17 +17,14 @@
 
         .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; }
 
-        /* CALENDAR FIX: 7 DAYS ACROSS, CENTERED */
         .cal-flex { display: flex; flex-wrap: wrap; width: 100%; justify-content: flex-start; }
         .cal-day { 
             width: 14.28%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
             font-size: 0.8rem; font-weight: 900; border-radius: 8px; color: #ffffff !important;
-            border: 1px solid transparent;
         }
-        .day-pass { background: #15803d !important; border-color: #22c55e; }
-        .day-fail { background: #b91c1c !important; border-color: #ef4444; }
+        .day-pass { background: #15803d !important; border: 1px solid #22c55e; }
+        .day-fail { background: #b91c1c !important; border: 1px solid #ef4444; }
 
-        /* UNIFIED SELECTOR BUTTONS */
         .ui-trigger {
             background: transparent !important; color: var(--neon) !important;
             border: 1px solid rgba(34, 197, 94, 0.4) !important; border-radius: 8px;
@@ -41,6 +38,8 @@
         
         .tag-btn { padding: 15px; border-radius: 12px; border: 1px solid #333; font-size: 12px; font-weight: 800; text-align: center; text-transform: uppercase; color: #666; }
         .tag-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(34,197,94,0.05); }
+
+        textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 15px; width: 100%; height: 150px; outline: none; }
     </style>
 </head>
 <body class="pb-32">
@@ -48,10 +47,7 @@
     <div id="v-log">
         <div class="sticky-header text-center">
             <h1 class="text-[11px] font-black tracking-[0.5em] text-zinc-500 mb-4 uppercase">The Ultimate Tracker</h1>
-            
-            <div class="px-6 mb-8">
-                <p id="quote" class="text-xl font-black italic uppercase leading-tight"></p>
-            </div>
+            <div class="px-6 mb-8"><p id="quote" class="text-xl font-black italic uppercase leading-tight"></p></div>
             
             <div class="flex justify-center items-center gap-8 mb-4">
                 <div class="flex flex-col items-center">
@@ -74,19 +70,13 @@
                 <button onclick="shiftDay(1)" class="text-zinc-600 text-2xl font-black p-2">►</button>
             </div>
         </div>
-
         <div id="log-list" class="p-4 space-y-6"></div>
-        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400 text-lg tracking-widest active:scale-95 transition">Let's Fucking Go</button></div>
+        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400 text-lg tracking-widest">Let's Fucking Go</button></div>
     </div>
 
     <div id="v-stats" class="hidden p-4 space-y-6">
         <div class="flex flex-col items-center py-6 gap-4">
             <button onclick="openPeriodPicker()" class="ui-trigger px-10 py-4">Range: <span id="active-period">Lifetime</span> ▼</button>
-            <div id="custom-date-row" class="hidden flex gap-2 items-center bg-zinc-900/50 p-2 rounded-xl">
-                <input type="date" id="range-start" onchange="runStats()" class="bg-transparent text-[10px] text-green-400">
-                <span class="text-zinc-600 text-[10px]">TO</span>
-                <input type="date" id="range-end" onchange="runStats()" class="bg-transparent text-[10px] text-green-400">
-            </div>
         </div>
         <div id="stats-grid" class="grid grid-cols-1 gap-4 pb-20"></div>
     </div>
@@ -98,7 +88,7 @@
             <div class="w-8"></div>
         </div>
         <div class="p-6 grid grid-cols-2 gap-3" id="picker-options"></div>
-        <div class="p-6 mt-auto"><button onclick="closeModal('picker-modal')" class="w-full py-5 glass text-green-400 font-black uppercase tracking-widest">Confirm</button></div>
+        <div class="p-6 mt-auto" id="picker-footer"></div>
     </div>
 
     <div id="detail-modal" class="modal">
@@ -116,31 +106,30 @@
     </nav>
 
     <script>
-        const quotes = [
-            {t: "NOTHING CHANGES IF NOTHING CHANGES", c: "#22c55e"},
-            {t: "DISCIPLINE IS FREEDOM", c: "#3b82f6"},
-            {t: "WIN THE MORNING WIN THE DAY", c: "#eab308"},
-            {t: "SHOW UP UNTIL THE JOB IS DONE", c: "#ef4444"}
-        ];
-        
+        const quotes = [{t: "NOTHING CHANGES IF NOTHING CHANGES", c: "#22c55e"}, {t: "DISCIPLINE IS FREEDOM", c: "#3b82f6"}, {t: "WIN THE MORNING WIN THE DAY", c: "#eab308"}, {t: "SHOW UP UNTIL THE JOB IS DONE", c: "#ef4444"}];
         const categories = ["Morning Rituals", "Physical", "Mental", "Nutrition", "Vices"];
+        
+        // INCREMENT LOGIC
+        const genArr = (start, end, step) => Array.from({length: Math.floor((end - start) / step) + 1}, (_, i) => start + (i * step));
+        const stepArr = [...genArr(8000, 15000, 250), ...genArr(15500, 20000, 500)];
+
         const fullSchema = [
-            { id: 'm_push', label: 'Pushups', type: 'pick', options: Array.from({length:31}, (_,i)=>i*5), cat: 'Morning Rituals' },
-            { id: 'm_squat', label: 'Squats', type: 'pick', options: Array.from({length:31}, (_,i)=>i*5), cat: 'Morning Rituals' },
+            { id: 'm_push', label: 'Pushups', type: 'pick', options: genArr(0, 75, 5), cat: 'Morning Rituals' },
+            { id: 'm_squat', label: 'Squats', type: 'pick', options: genArr(0, 75, 5), cat: 'Morning Rituals' },
             { id: 'floss', label: 'Flossing', type: 'chk', cat: 'Morning Rituals' },
             { id: 'mouth', label: 'Mouth Taping', type: 'chk', cat: 'Morning Rituals' },
             { id: 'neeti', label: 'Jal Neeti', type: 'chk', cat: 'Morning Rituals' },
             { id: 'fin', label: 'Finshots', type: 'chk', cat: 'Mental' },
             { id: 'hanuman', label: 'Hanuman Chalisa', type: 'chk', cat: 'Mental' },
             { id: 'journ', label: 'Journaled', type: 'chk', cat: 'Mental' },
-            { id: 'med', label: 'Meditation', type: 'pick', options: [5,10,15,20,30,45,60], cat: 'Mental' },
+            { id: 'med', label: 'Meditation', type: 'text', cat: 'Mental' },
             { id: 'news', label: 'Newspaper', type: 'chk', cat: 'Mental' },
             { id: 'book', label: 'Read', type: 'pick', options: [5,10,15,20,25,30,40,50,60,80,100], cat: 'Mental' },
-            { id: 'hang', label: 'Dead Hang', type: 'pick', options: [10,20,30,40,50,60,90,120,150,180,240,300], cat: 'Physical' },
-            { id: 'steps', label: 'Steps', type: 'pick', options: [8000,9000,10000,11000,12000,13000,14000,15000,18000,20000], cat: 'Physical' },
+            { id: 'hang', label: 'Dead Hang', type: 'pick', options: genArr(0, 120, 10), cat: 'Physical' },
+            { id: 'steps', label: 'Steps', type: 'pick', options: stepArr, cat: 'Physical' },
             { id: 'work', label: 'Workout', type: 'multi', options: ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Walk", "Run", "Other"], cat: 'Physical' },
             { id: 'creat', label: 'Creatine', type: 'pick', options: [0,1,2,3,4,5,6,7,8,9,10], cat: 'Nutrition' },
-            { id: 'prot', label: 'Protein', type: 'pick', options: [90,100,110,120,130,140,150,160,170,180,190,200], cat: 'Nutrition' },
+            { id: 'prot', label: 'Protein', type: 'pick', options: genArr(90, 200, 5), cat: 'Nutrition' },
             { id: 'water', label: 'Water', type: 'pick', options: [1,1.5,2,2.5,3,3.5,4,4.5,5], cat: 'Nutrition' },
             { id: 'alc', label: 'No Alcohol', type: 'chk', cat: 'Vices' },
             { id: 'fried', label: 'No Fried', type: 'chk', cat: 'Vices' },
@@ -148,27 +137,22 @@
             { id: 'sug', label: 'No Sugar', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('ultimate_v18')) || {};
+        let db = JSON.parse(localStorage.getItem('ultimate_v19')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
         let statPeriod = 'all';
 
-        function fmtDate(ds) {
-            const d = new Date(ds);
-            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-        }
+        function fmtDate(ds) { return new Date(ds).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
 
         function renderLog() {
             const q = quotes[new Date().getDate() % quotes.length];
             document.getElementById('quote').innerText = q.t;
             document.getElementById('quote').style.color = q.c;
             document.getElementById('log-date-display').innerText = fmtDate(activeDate);
-            
             const list = document.getElementById('log-list'); list.innerHTML = '';
             categories.forEach(c => {
                 let html = `<div class="glass p-6"><h3 class="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
-                const sortedHabits = fullSchema.filter(s => s.cat === c).sort((a,b) => a.label.localeCompare(b.label));
-                sortedHabits.forEach(s => {
+                fullSchema.filter(s => s.cat === c).sort((a,b) => a.label.localeCompare(b.label)).forEach(s => {
                     const d = db[activeDate] || {};
                     const chk = d[s.id+'_c'] || false;
                     const val = d[s.id+'_v'] || '';
@@ -177,9 +161,7 @@
                             <div onclick="event.stopPropagation(); toggleCh('${s.id}')" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''}"></div>
                             <span class="text-sm font-bold ${chk?'text-white':'text-zinc-500'}">${s.label}</span>
                         </div>`;
-                    if(s.type !== 'chk') {
-                        html += `<button onclick="openPicker('${s.id}')" class="ui-trigger">${val ? val.toString().replace(/,/g, '•') : 'SET'}</button>`;
-                    }
+                    if(s.type !== 'chk') html += `<button onclick="openPicker('${s.id}')" class="ui-trigger">${val ? (s.type==='text' ? 'VIEW' : val.toString().replace(/,/g, '•')) : 'SET'}</button>`;
                     html += `</div>`;
                 });
                 list.innerHTML += html + `</div></div>`;
@@ -193,12 +175,21 @@
             const s = fullSchema.find(x => x.id === id);
             document.getElementById('picker-title').innerText = s.label;
             const area = document.getElementById('picker-options'); area.innerHTML = '';
+            const footer = document.getElementById('picker-footer'); footer.innerHTML = '';
             const curVal = (db[activeDate] && db[activeDate][id+'_v']) ? db[activeDate][id+'_v'].toString().split(',') : [];
 
-            s.options.forEach(opt => {
-                const active = curVal.includes(opt.toString());
-                area.innerHTML += `<div onclick="handlePick('${id}', '${opt}', ${s.type==='multi'})" class="tag-btn ${active?'active':''}">${opt}</div>`;
-            });
+            if(s.type === 'text') {
+                area.classList.remove('grid-cols-2');
+                area.innerHTML = `<textarea id="txt-input" placeholder="Describe your session...">${db[activeDate][id+'_v'] || ''}</textarea>`;
+                footer.innerHTML = `<button onclick="handleText('${id}')" class="w-full py-5 glass text-green-400 font-black uppercase tracking-widest">SAVE MEDITATION</button>`;
+            } else {
+                area.classList.add('grid-cols-2');
+                s.options.forEach(opt => {
+                    const active = curVal.includes(opt.toString());
+                    area.innerHTML += `<div onclick="handlePick('${id}', '${opt}', ${s.type==='multi'})" class="tag-btn ${active?'active':''}">${opt}</div>`;
+                });
+                if(s.type === 'multi') footer.innerHTML = `<button onclick="closeModal('picker-modal')" class="w-full py-5 glass text-green-400 font-black uppercase tracking-widest">CONFIRM WORKOUT</button>`;
+            }
             document.getElementById('picker-modal').style.display = 'flex';
         }
 
@@ -208,11 +199,18 @@
             if(multi) {
                 cur = cur.includes(val) ? cur.filter(x => x !== val) : [...cur, val];
                 db[activeDate][id+'_v'] = cur.join(',');
+                openPicker(id);
             } else {
                 db[activeDate][id+'_v'] = val;
                 closeModal('picker-modal');
             }
-            openPicker(id); renderLog();
+            renderLog();
+        }
+
+        function handleText(id) {
+            if(!db[activeDate]) db[activeDate] = {};
+            db[activeDate][id+'_v'] = document.getElementById('txt-input').value;
+            closeModal('picker-modal'); renderLog();
         }
 
         function updateScore() {
@@ -235,10 +233,11 @@
 
         function openCalendar() {
             const area = document.getElementById('picker-options'); area.innerHTML = '';
+            area.classList.add('grid-cols-2');
             document.getElementById('picker-title').innerText = "Select Date";
             const y = calView.getFullYear(), m = calView.getMonth();
             let html = `<div class="col-span-2 mb-4 flex justify-between px-4"><button onclick="changeCal(-1)">◄</button><span class="font-black">${new Intl.DateTimeFormat('en-US',{month:'short',year:'numeric'}).format(calView)}</span><button onclick="changeCal(1)">►</button></div>`;
-            html += `<div class="col-span-2 cal-flex mb-2 px-2">${['S','M','T','W','T','F','S'].map(d=>`<div class="cal-day text-[10px] text-zinc-700">${d}</div>`).join('')}</div><div class="col-span-2 cal-flex px-2">`;
+            html += `<div class="col-span-2 cal-flex mb-2 px-2">${['S','M','T','W','T','F','S'].map(d=>`<div class="cal-day text-[10px] text-zinc-700 font-black">${d}</div>`).join('')}</div><div class="col-span-2 cal-flex px-2">`;
             const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
             for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
             for(let i=1; i<=last; i++) {
@@ -295,28 +294,23 @@
 
         function openPeriodPicker() { 
             const area = document.getElementById('picker-options'); area.innerHTML = '';
+            area.classList.add('grid-cols-2');
             document.getElementById('picker-title').innerText = "Select Range";
-            const opts = [['7','Last 7 Days'],['30','Last 30 Days'],['all','Lifetime'],['custom','Custom Range']];
-            opts.forEach(o => {
-                area.innerHTML += `<div onclick="setPeriod('${o[0]}')" class="tag-btn col-span-2">${o[1]}</div>`;
-            });
+            const opts = [['7','Last 7 Days'],['30','Last 30 Days'],['all','Lifetime']];
+            opts.forEach(o => { area.innerHTML += `<div onclick="setPeriod('${o[0]}')" class="tag-btn col-span-2">${o[1]}</div>`; });
             document.getElementById('picker-modal').style.display = 'flex';
         }
 
         function setPeriod(p) { 
             statPeriod = p; 
-            document.getElementById('active-period').innerText = p === 'all' ? 'Lifetime' : (p === 'custom' ? 'Custom' : p+' Days');
-            document.getElementById('custom-date-row').classList.toggle('hidden', p !== 'custom');
+            document.getElementById('active-period').innerText = p === 'all' ? 'Lifetime' : p+' Days';
             closeModal('picker-modal'); runStats(); 
         }
 
         function runStats() {
             const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
             let startDate, endDate = new Date();
-            if(statPeriod === 'custom') {
-                startDate = new Date(document.getElementById('range-start').value || 0);
-                endDate = new Date(document.getElementById('range-end').value || '2099-01-01');
-            } else if (statPeriod === 'all') {
+            if (statPeriod === 'all') {
                 const dates = Object.keys(db).sort(); startDate = dates.length ? new Date(dates[0]) : new Date();
             } else {
                 startDate = new Date(); startDate.setDate(startDate.getDate() - parseInt(statPeriod));
@@ -329,18 +323,15 @@
                     const dt = new Date(d);
                     if(dt >= startDate && dt <= endDate) {
                         if(s.type === 'chk' && db[d][s.id+'_c']) count++;
-                        else if(db[d][s.id+'_v']) { sum += parseFloat(db[d][s.id+'_v']); count++; }
+                        else if(db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) { sum += parseFloat(db[d][s.id+'_v']); count++; }
                     }
                 });
                 let displayVal = s.type === 'chk' ? (count / totalDays).toFixed(2) : (sum / totalDays).toFixed(1);
-                grid.innerHTML += `<div class="glass p-6 flex justify-between items-center">
-                    <span class="text-xs font-black text-white uppercase tracking-wider">${s.label}</span>
-                    <span class="text-2xl font-black text-green-400 italic">${displayVal}</span>
-                </div>`;
+                grid.innerHTML += `<div class="glass p-6 flex justify-between items-center"><span class="text-xs font-black text-white uppercase tracking-wider">${s.label}</span><span class="text-2xl font-black text-green-400 italic">${displayVal}</span></div>`;
             });
         }
 
-        function save() { localStorage.setItem('ultimate_v18', JSON.stringify(db)); alert("LEVEL UP."); }
+        function save() { localStorage.setItem('ultimate_v19', JSON.stringify(db)); alert("SYCHRONIZED."); }
         renderLog();
     </script>
 </body>
