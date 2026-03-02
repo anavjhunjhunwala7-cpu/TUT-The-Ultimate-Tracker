@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ULTIMATE TRACKER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #09090b; color: #fafafa; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass { background: rgba(24, 24, 27, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; }
+        input[type="checkbox"] { width: 22px; height: 22px; accent-color: #22c55e; cursor: pointer; }
+        .calendar-grid { display: grid; grid-template-cols: repeat(7, 1fr); gap: 4px; }
+        .cal-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.7rem; border: 1px solid rgba(255,255,255,0.05); }
+        .cal-today { border: 2px solid #22c55e !important; color: #22c55e; }
+        .cal-has-data { background: #14532d; color: #4ade80; }
+        .cal-selected { background: #22c55e !important; color: #000 !important; font-weight: 900; }
+        select, input[type="text"] { background: #18181b; border: 1px solid #3f3f46; color: #4ade80; border-radius: 8px; padding: 4px 8px; outline: none; width: 100px; font-size: 0.85rem; appearance: none; text-align: center; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #18181b; border-top: 1px solid #27272a; display: flex; padding: 12px 10px 30px 10px; z-index: 100; }
+        .nav-btn { flex: 1; text-align: center; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #71717a; padding: 10px 0; border-radius: 12px; transition: 0.2s; }
+        .nav-btn.active { background: #27272a; color: #22c55e; }
+        .stat-card { background: #18181b; border: 1px solid #27272a; padding: 1rem; border-radius: 1rem; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+    </style>
+</head>
+<body class="p-4 pb-40">
+
+    <div class="flex justify-between items-start mb-6">
+        <div class="w-full">
+            <h1 class="text-xl font-black tracking-tighter text-white uppercase italic">Ultimate Tracker</h1>
+            <div class="flex justify-between items-center w-full mt-1">
+                <div id="days-passed" class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Day 1</div>
+                <div id="active-date-display" class="text-green-500 font-mono text-xs uppercase text-right">Today</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-col items-center justify-center py-4 mb-8">
+        <div id="day-score" class="text-6xl font-black text-green-400">0%</div>
+        <div class="text-[10px] text-zinc-500 uppercase font-black tracking-[0.3em]">Day Score</div>
+    </div>
+
+    <div id="view-log" class="space-y-6">
+        <div id="task-container" class="space-y-8"></div>
+        <button onclick="saveData()" class="w-full bg-green-500 text-black font-black py-5 rounded-2xl shadow-lg active:scale-95 transition-all uppercase tracking-tighter text-lg mt-4">
+            Lock In Today
+        </button>
+    </div>
+
+    <div id="view-cal" class="hidden space-y-4">
+        <div class="flex justify-between items-center px-2">
+            <button onclick="changeMonth(-1)" class="text-zinc-400 p-2 text-xs font-bold uppercase tracking-widest">← Prev</button>
+            <h2 id="month-label" class="font-bold uppercase tracking-widest text-xs text-green-400"></h2>
+            <button onclick="changeMonth(1)" class="text-zinc-400 p-2 text-xs font-bold uppercase tracking-widest">Next →</button>
+        </div>
+        <div class="glass p-3"><div id="calendar-grid" class="calendar-grid"></div></div>
+    </div>
+
+    <div id="view-stats" class="hidden space-y-6">
+        <div id="monthly-stats"></div>
+        <hr class="border-zinc-800">
+        <div id="inception-stats"></div>
+    </div>
+
+    <div id="workout-modal" class="modal" onclick="closeWorkoutModal(event)">
+        <div class="glass w-full max-h-[80vh] overflow-y-auto p-6" onclick="event.stopPropagation()">
+            <h3 class="text-lg font-black uppercase mb-4 text-green-400">Select Workouts</h3>
+            <div id="workout-list" class="grid grid-cols-1 gap-4 mb-6"></div>
+            <button onclick="closeWorkoutModal()" class="w-full bg-white text-black font-bold py-3 rounded-xl uppercase">Done</button>
+        </div>
+    </div>
+
+    <nav class="nav-bar">
+        <button onclick="switchTab('log')" id="tab-log" class="nav-btn active">Log</button>
+        <button onclick="switchTab('cal')" id="tab-cal" class="nav-btn">Calendar</button>
+        <button onclick="switchTab('stats')" id="tab-stats" class="nav-btn">Insights</button>
+    </nav>
+
+    <script>
+        const workoutOptions = ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Run", "Walk", "Cycle", "Other"];
+        
+        const schema = [
+            { id: 'm_push', label: 'Morning Pushups', type: 'select', range: [0, 150, 5], cat: 'Morning Rituals' },
+            { id: 'm_squat', label: 'Morning Squats', type: 'select', range: [0, 150, 5], cat: 'Morning Rituals' },
+            { id: 'neeti', label: 'Jal Neeti', type: 'check', cat: 'Morning Rituals' },
+            { id: 'flossing', label: 'Flossing', type: 'check', cat: 'Morning Rituals' },
+            { id: 'meditation', label: 'Meditation', type: 'text', unit: 'type', cat: 'Mental' },
+            { id: 'hanuman', label: 'Hanuman Chalisa', type: 'check', cat: 'Mental' },
+            { id: 'news', label: 'Newspaper', type: 'check', cat: 'Mental' },
+            { id: 'book', label: 'Read Book', type: 'select', range: [5, 100, 5], cat: 'Mental' },
+            { id: 'journal', label: 'Journaled', type: 'check', cat: 'Mental' },
+            { id: 'finshots', label: 'Finshots', type: 'check', cat: 'Mental' },
+            { id: 'work', label: 'Workout', type: 'workout', cat: 'Physical' },
+            { id: 'steps', label: 'Steps', type: 'steps', cat: 'Physical' },
+            { id: 'hang', label: 'Dead Hang', type: 'select', range: [0, 300, 5], cat: 'Physical' },
+            { id: 'mouth_tape', label: 'Mouth Taping', type: 'check', cat: 'Physical' },
+            { id: 'rest', label: 'Rest Day (Weekly)', type: 'check', cat: 'Bonus' },
+            { id: 'prot', label: 'Protein', type: 'select', range: [90, 200, 5], cat: 'Nutrition' },
+            { id: 'water', label: 'Water', type: 'select', range: [2, 5, 0.25], cat: 'Nutrition' },
+            { id: 'creat', label: 'Creatine', type: 'select', range: [0, 10, 1], cat: 'Nutrition' },
+            { id: 'weight', label: 'Body Weight', type: 'text', unit: 'kg', cat: 'Nutrition' },
+            { id: 'fast', label: 'Fasting (Weekly)', type: 'fast', cat: 'Bonus' },
+            { id: 'no_alc', label: 'No Alcohol', type: 'check', cat: 'Vices' },
+            { id: 'no_fried', label: 'No Fried', type: 'check', cat: 'Vices' },
+            { id: 'no_sug', label: 'No Sugar', type: 'check', cat: 'Vices' },
+            { id: 'no_smoke', label: 'No Smoking', type: 'check', cat: 'Vices' }
+        ];
+
+        let db = JSON.parse(localStorage.getItem('tracker_github_final')) || {};
+        const INCEPTION_DATE = '2026-03-02';
+        let today = new Date().toISOString().split('T')[0];
+        let activeDate = today;
+        let viewMonth = new Date();
+
+        function generateOptions(type, range) {
+            let opts = [];
+            if(type === 'fast') return [20, 24, 28, 32, 36];
+            if(type === 'steps') {
+                for(let i=8000; i<=15000; i+=250) opts.push(i);
+                for(let i=15500; i<=20000; i+=500) opts.push(i);
+                return opts;
+            }
+            const [min, max, step] = range;
+            for(let i=min; i<=max; i+=step) opts.push(i);
+            return opts;
+        }
+
+        function renderLog() {
+            const container = document.getElementById('task-container');
+            container.innerHTML = '';
+            const cats = [...new Set(schema.map(s => s.cat))];
+            const data = db[activeDate] || {};
+
+            cats.forEach(c => {
+                let html = `<div class="glass p-5"><h2 class="text-zinc-500 text-[9px] font-black uppercase tracking-widest mb-4 border-b border-zinc-800 pb-2">${c}</h2><div class="space-y-6">`;
+                schema.filter(s => s.cat === c).forEach(t => {
+                    const checked = data[t.id + '_checked'] || false;
+                    const val = data[t.id + '_val'] || '';
+                    html += `<div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="${t.id}_check" ${checked ? 'checked' : ''} onchange="calculateScore()">
+                            <span class="text-sm font-bold ${checked ? 'text-white' : 'text-zinc-600'}">${t.label}</span>
+                        </div>`;
+                    
+                    if(t.type === 'workout') {
+                        html += `<div class="flex flex-col items-end gap-1">
+                                    <button onclick="openWorkoutModal()" class="text-[10px] uppercase font-bold text-green-400 border border-green-900/50 px-2 py-1 rounded">Select</button>
+                                    <input type="text" id="work_val" value="${val}" readonly class="w-32 text-[10px] text-zinc-500 border-none truncate text-right bg-transparent">
+                                 </div>`;
+                    } else if (['select', 'steps', 'fast'].includes(t.type)) {
+                        const options = generateOptions(t.type, t.range);
+                        html += `<select id="${t.id}_val">
+                                    <option value="">--</option>
+                                    ${options.map(o => `<option value="${o}" ${val == o ? 'selected' : ''}>${o}</option>`).join('')}
+                                 </select>`;
+                    } else if(t.type !== 'check') {
+                        html += `<input type="text" id="${t.id}_val" value="${val}" placeholder="${t.unit || ''}">`;
+                    }
+                    html += `</div>`;
+                    if(t.type === 'workout') {
+                        const otherVal = data['work_other'] || '';
+                        html += `<input type="text" id="work_other" value="${otherVal}" placeholder="Specifics..." class="w-full mt-2 text-left bg-zinc-900 rounded p-2 text-xs border border-zinc-800 ${val.includes('Other') ? '' : 'hidden'}">`;
+                    }
+                });
+                container.innerHTML += html + `</div></div>`;
+            });
+            updateDaysPassed();
+            calculateScore();
+            document.getElementById('active-date-display').innerText = activeDate === today ? "Today" : activeDate;
+        }
+
+        function openWorkoutModal() {
+            const modal = document.getElementById('workout-modal');
+            const list = document.getElementById('workout-list');
+            const currentSelected = document.getElementById('work_val').value.split(', ');
+            list.innerHTML = '';
+            workoutOptions.forEach(opt => {
+                list.innerHTML += `<label class="flex items-center gap-4 text-lg py-2 border-b border-zinc-800"><input type="checkbox" class="workout-opt" value="${opt}" ${currentSelected.includes(opt) ? 'checked' : ''}> ${opt}</label>`;
+            });
+            modal.style.display = 'flex';
+        }
+
+        function closeWorkoutModal() {
+            const selected = Array.from(document.querySelectorAll('.workout-opt:checked')).map(el => el.value);
+            document.getElementById('work_val').value = selected.join(', ');
+            if (document.getElementById('work_other')) {
+                document.getElementById('work_other').classList.toggle('hidden', !selected.includes('Other'));
+            }
+            document.getElementById('workout-modal').style.display = 'none';
+        }
+
+        function updateDaysPassed() {
+            const start = new Date(INCEPTION_DATE);
+            const now = new Date();
+            const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
+            document.getElementById('days-passed').innerText = `Day ${diff > 0 ? diff : 1}`;
+        }
+
+        function calculateScore() {
+            const tasks = schema.filter(s => s.cat !== 'Bonus');
+            let done = 0;
+            tasks.forEach(t => { if(document.getElementById(t.id + '_check')?.checked) done++; });
+            document.getElementById('day-score').innerText = Math.round((done/tasks.length)*100) + '%';
+        }
+
+        function saveData() {
+            if(!db[activeDate]) db[activeDate] = {};
+            schema.forEach(s => {
+                db[activeDate][s.id + '_checked'] = document.getElementById(s.id + '_check').checked;
+                if(s.type !== 'check') db[activeDate][s.id + '_val'] = document.getElementById(s.id + '_val').value;
+            });
+            if (document.getElementById('work_other')) db[activeDate]['work_other'] = document.getElementById('work_other').value;
+            localStorage.setItem('tracker_github_final', JSON.stringify(db));
+            alert("Entry Saved.");
+            renderStats();
+            renderCalendar();
+        }
+
+        function renderStats() {
+            const metrics = [
+                { id: 'prot', label: 'Protein', unit: 'g' },
+                { id: 'm_push', label: 'Pushups', unit: 'r' },
+                { id: 'steps', label: 'Steps', unit: 's' },
+                { id: 'water', label: 'Water', unit: 'L' }
+            ];
+            const renderBlock = (targetId, title, filterFn) => {
+                const container = document.getElementById(targetId);
+                container.innerHTML = `<h2 class='text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3'>${title}</h2><div class='grid grid-cols-2 gap-2'>`;
+                metrics.forEach(m => {
+                    let total = 0, count = 0;
+                    Object.keys(db).filter(filterFn).forEach(d => {
+                        const val = parseFloat(db[d][m.id + '_val']);
+                        if(!isNaN(val)) { total += val; count++; }
+                    });
+                    const avg = count > 0 ? (total/count).toFixed(1) : 0;
+                    container.innerHTML += `<div class="stat-card"><div class="text-[9px] text-zinc-500 font-bold uppercase mb-1">${m.label}</div><div class="text-xl font-black">${avg}<span class="text-[10px] text-green-500 ml-1 font-normal uppercase">${m.unit}</span></div></div>`;
+                });
+                container.innerHTML += `</div>`;
+            };
+            const curMonth = viewMonth.toISOString().substring(0, 7);
+            renderBlock('monthly-stats', 'Monthly Averages', d => d.startsWith(curMonth));
+            renderBlock('inception-stats', 'Lifetime Averages', () => true);
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
+            const y = viewMonth.getFullYear(), m = viewMonth.getMonth();
+            document.getElementById('month-label').innerText = new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(viewMonth);
+            const first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate();
+            for(let i=0; i<first; i++) grid.innerHTML += '<div></div>';
+            for(let i=1; i<=days; i++) {
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                const div = document.createElement('div');
+                div.className = `cal-day ${db[ds]?'cal-has-data':''} ${ds===today?'cal-today':''} ${ds===activeDate?'cal-selected':''}`;
+                div.innerText = i;
+                div.onclick = () => { activeDate = ds; switchTab('log'); renderLog(); };
+                grid.appendChild(div);
+            }
+        }
+
+        function switchTab(t) {
+            ['log','cal','stats'].forEach(tab => document.getElementById('view-'+tab).classList.add('hidden'));
+            document.getElementById('view-'+t).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-'+t).classList.add('active');
+            if(t==='cal') renderCalendar();
+            if(t==='stats') renderStats();
+        }
+
+        function changeMonth(dir) { viewMonth.setMonth(viewMonth.getMonth() + dir); renderCalendar(); }
+        renderLog();
+    </script>
+</body>
+</html>
