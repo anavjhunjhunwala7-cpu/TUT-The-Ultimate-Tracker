@@ -3,161 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE TRACKER PRO</title>
+    <title>ULTIMATE TRACKER 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --neon: #22c55e; --bg: #050505; --glass: rgba(22, 22, 25, 0.7); }
+        :root { --neon: #22c55e; --bg: #050505; --glass: rgba(20, 20, 23, 0.8); }
         body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
         
-        /* SMOOTH FREEZE PANE */
         .sticky-header {
             position: sticky; top: 0; z-index: 100;
-            background: linear-gradient(to bottom, rgba(5,5,5,1) 60%, rgba(5,5,5,0.8) 80%, transparent);
-            backdrop-filter: blur(12px); padding: 20px 0 30px;
+            background: linear-gradient(to bottom, #050505 70%, transparent);
+            backdrop-filter: blur(15px); padding: 20px 0 40px;
         }
 
-        .glass { 
-            background: var(--glass); backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; 
-        }
+        .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; }
 
-        /* WORKOUT TAGS - V1 STYLE (PREVIOUS BEST) */
-        .w-tag { 
-            padding: 8px 14px; border-radius: 10px; border: 1px solid #333; 
-            font-size: 11px; font-weight: 800; color: #555; text-transform: uppercase; transition: 0.2s;
-        }
-        .w-tag.selected { background: var(--neon); border-color: var(--neon); color: #000; box-shadow: 0 0 15px rgba(34,197,94,0.3); }
-
-        /* CALENDAR GRIDS */
+        /* CALENDAR SYSTEM */
         .cal-flex { display: flex; flex-wrap: wrap; width: 100%; }
         .cal-day { 
-            flex: 0 0 14.28%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
-            font-size: 0.75rem; font-weight: 800; border-radius: 8px;
+            flex: 0 0 14.28%; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 800; border-radius: 8px; transition: 0.2s;
         }
-        .day-green { background: rgba(34, 197, 94, 0.25); color: var(--neon); border: 1px solid var(--neon); }
-        .day-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .day-pass { background: rgba(34, 197, 94, 0.2) !important; color: var(--neon); border: 1px solid var(--neon); }
+        .day-fail { background: rgba(239, 68, 68, 0.15) !important; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 
-        /* REMOVE SELECT ARROWS */
-        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
-        input, select {
-            background: rgba(255,255,255,0.05) !important; color: var(--neon) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 8px;
-            padding: 8px; text-align: center; outline: none;
-        }
+        /* WORKOUT MODAL TAGS */
+        .w-btn { padding: 12px; border-radius: 12px; border: 1px solid #333; font-size: 11px; font-weight: 800; text-align: center; text-transform: uppercase; }
+        .w-btn.selected { background: var(--neon); color: #000; border-color: var(--neon); box-shadow: 0 0 15px rgba(34,197,94,0.4); }
+
+        input, select { background: rgba(255,255,255,0.05) !important; color: var(--neon) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 8px; padding: 8px; outline: none; -webkit-appearance: none; }
 
         .modal { position: fixed; inset: 0; background: #050505; z-index: 2000; display: none; flex-direction: column; overflow-y: auto; }
-        .nav-btn { flex: 1; text-align: center; font-size: 10px; font-weight: 900; color: #444; letter-spacing: 1px; }
-        .nav-btn.active { color: var(--neon); }
+        .nav-link { flex: 1; text-align: center; font-size: 10px; font-weight: 900; color: #444; letter-spacing: 1px; }
+        .nav-link.active { color: var(--neon); }
     </style>
 </head>
 <body class="pb-32">
 
     <div id="v-log">
-        <div class="sticky-header text-center">
-            <h1 class="text-[10px] font-black tracking-[0.5em] text-zinc-500 mb-2">ULTIMATE TRACKER PRO</h1>
+        <div class="sticky-header text-center px-4">
+            <h1 class="text-[10px] font-black tracking-[0.4em] text-zinc-500 mb-2 uppercase">Ultimate Tracker Pro</h1>
             <p id="quote" class="text-[9px] font-bold text-zinc-400 italic mb-6 px-10"></p>
             <div class="inline-flex flex-col items-center">
-                <div class="w-20 h-20 rounded-full border border-green-500/20 flex items-center justify-center bg-black shadow-[0_0_30px_rgba(34,197,94,0.1)]">
-                    <span id="score-circle" class="text-2xl font-black text-green-400">0%</span>
+                <div class="w-20 h-20 rounded-full border border-zinc-800 flex items-center justify-center bg-black">
+                    <span id="score-val" class="text-2xl font-black text-green-400">0%</span>
                 </div>
-                <button onclick="openCalModal('jump')" class="mt-4 text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                    <span id="log-date"></span> <span class="text-green-500 text-[8px]">▼</span>
+                <button onclick="openCalendar('jump')" class="mt-4 text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                    <span id="log-date"></span> <span class="text-green-500">▼</span>
                 </button>
             </div>
         </div>
 
-        <div id="log-container" class="p-4 space-y-6"></div>
-        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400 tracking-widest">Commit</button></div>
+        <div id="log-list" class="p-4 space-y-6"></div>
+        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400">Lock In</button></div>
     </div>
 
     <div id="v-stats" class="hidden p-4 space-y-6">
-        <div class="flex flex-col items-center py-6 gap-4">
-            <button onclick="openPeriodModal()" class="glass px-6 py-3 text-[10px] font-black tracking-widest text-green-400 uppercase">
-                Select Period ▼
+        <div class="flex flex-col items-center py-6">
+            <button onclick="openPeriodPicker()" class="glass px-8 py-3 text-[10px] font-black text-green-400 uppercase tracking-widest">
+                Timeframe: <span id="active-period">Lifetime</span> ▼
             </button>
-            <p id="period-label" class="text-[9px] font-black text-zinc-500 uppercase tracking-widest">LIFETIME INCEPTION</p>
         </div>
         <div id="stats-grid" class="grid grid-cols-2 gap-3"></div>
     </div>
 
-    <div id="detail-modal" class="modal">
+    <div id="work-modal" class="modal">
         <div class="p-6 flex justify-between items-center border-b border-white/5">
-            <button onclick="closeModal('detail-modal')" class="text-2xl text-zinc-500">←</button>
-            <h3 id="dt-title" class="font-black italic uppercase text-green-400 tracking-tighter"></h3>
+            <button onclick="closeModal('work-modal')" class="text-2xl">←</button>
+            <h3 class="font-black uppercase text-sm tracking-widest">Select Training</h3>
             <div class="w-8"></div>
         </div>
-        <div class="p-6 space-y-8">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="glass p-4 text-center">
-                    <p class="text-[8px] font-black text-zinc-500 uppercase mb-1">Daily Avg</p>
-                    <p id="dt-avg-d" class="text-xl font-black text-white">-</p>
-                </div>
-                <div class="glass p-4 text-center">
-                    <p class="text-[8px] font-black text-zinc-500 uppercase mb-1">Weekly Avg</p>
-                    <p id="dt-avg-w" class="text-xl font-black text-white">-</p>
-                </div>
+        <div class="p-6 grid grid-cols-2 gap-3" id="work-options"></div>
+        <div class="p-6"><button onclick="closeModal('work-modal')" class="w-full py-4 glass text-green-400 font-black">CONFIRM</button></div>
+    </div>
+
+    <div id="detail-modal" class="modal">
+        <div class="p-6 flex justify-between items-center">
+            <button onclick="closeModal('detail-modal')" class="text-2xl">←</button>
+            <h3 id="dt-name" class="font-black italic uppercase text-green-400"></h3>
+            <div class="w-8"></div>
+        </div>
+        <div class="p-6 space-y-6">
+            <div class="flex justify-between text-center gap-2">
+                <div class="glass flex-1 p-4"><p class="text-[8px] text-zinc-500 uppercase">Avg</p><p id="dt-avg" class="text-xl font-bold">-</p></div>
+                <div class="glass flex-1 p-4"><p class="text-[8px] text-zinc-500 uppercase">Streak</p><p id="dt-streak" class="text-xl font-bold">0</p></div>
             </div>
-            <div class="cal-flex text-[9px] font-black text-zinc-600 mb-2 text-center uppercase">
-                <div class="w-[14.2%]">S</div><div class="w-[14.2%]">M</div><div class="w-[14.2%]">T</div><div class="w-[14.2%]">W</div><div class="w-[14.2%]">T</div><div class="w-[14.2%]">F</div><div class="w-[14.2%]">S</div>
-            </div>
-            <div id="dt-grid" class="cal-flex"></div>
+            <div id="dt-cal-area"></div>
         </div>
     </div>
 
     <div id="cal-modal" class="modal">
-        <div class="p-6 flex justify-between items-center border-b border-white/5">
+        <div class="p-6 flex justify-between items-center">
             <button onclick="closeModal('cal-modal')" class="text-2xl">←</button>
             <div class="flex items-center gap-4">
-                <button onclick="shiftMonth(-1)" class="font-black text-zinc-500">◄</button>
-                <span id="cal-month" class="font-black uppercase tracking-widest text-xs"></span>
-                <button onclick="shiftMonth(1)" class="font-black text-zinc-500">►</button>
+                <button onclick="changeCal(-1)" class="text-zinc-500">◄</button>
+                <span id="cal-title" class="font-black uppercase text-xs"></span>
+                <button onclick="changeCal(1)" class="text-zinc-500">►</button>
             </div>
             <div class="w-8"></div>
         </div>
-        <div class="p-4"><div id="cal-grid" class="cal-flex"></div></div>
+        <div class="p-4" id="cal-grid-area"></div>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-white/5 flex p-6 pb-10 z-[1000]">
-        <div onclick="setTab('log')" id="n-log" class="nav-btn active">TRACK</div>
-        <div onclick="setTab('stats')" id="n-stats" class="nav-btn">INSIGHTS</div>
+    <div id="period-modal" class="modal">
+        <div class="p-6 border-b border-white/5"><button onclick="closeModal('period-modal')" class="text-2xl">←</button></div>
+        <div class="p-6 space-y-3" id="period-list">
+            <button onclick="setPeriod('7')" class="w-full py-4 glass text-xs font-black uppercase">Last 7 Days</button>
+            <button onclick="setPeriod('30')" class="w-full py-4 glass text-xs font-black uppercase">Last 30 Days</button>
+            <button onclick="setPeriod('60')" class="w-full py-4 glass text-xs font-black uppercase">Last 2 Months</button>
+            <button onclick="setPeriod('90')" class="w-full py-4 glass text-xs font-black uppercase">Last 3 Months</button>
+            <button onclick="setPeriod('180')" class="w-full py-4 glass text-xs font-black uppercase">Last 6 Months</button>
+            <button onclick="setPeriod('all')" class="w-full py-4 glass text-xs font-black uppercase text-green-400">Lifetime</button>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/5 flex p-6 pb-10 z-[1000]">
+        <div onclick="tab('log')" id="n-log" class="nav-link active">TRACK</div>
+        <div onclick="tab('stats')" id="n-stats" class="nav-link">INSIGHTS</div>
     </nav>
 
     <script>
-        const quotes = ["DISCIPLINE = FREEDOM", "STAY UNCOMFORTABLE", "WIN THE MORNING", "HARD WORK WORKS", "ONE MORE REP"];
+        const quotes = ["DISCIPLINE IS FREEDOM", "ONE MORE REP", "CONSISTENCY WINS", "STAY HUNGRY"];
+        const workOptions = ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Walk", "Run", "Other"];
         const schema = [
-            { id: 'm_push', label: 'Morning Pushups', type: 'sel', range: [0,150,5], cat: 'Rituals' },
-            { id: 'm_squat', label: 'Morning Squats', type: 'sel', range: [0,150,5], cat: 'Rituals' },
-            { id: 'neeti', label: 'Jal Neeti', type: 'chk', cat: 'Rituals' },
-            { id: 'floss', label: 'Flossing', type: 'chk', cat: 'Rituals' },
-            { id: 'mouth', label: 'Mouth Taping', type: 'chk', cat: 'Rituals' },
-            { id: 'med', label: 'Meditation', type: 'num', ph: 'Type Here', cat: 'Mental' },
-            { id: 'hanuman', label: 'Hanuman Chalisa', type: 'chk', cat: 'Mental' },
-            { id: 'news', label: 'Newspaper', type: 'chk', cat: 'Mental' },
-            { id: 'book', label: 'Read Book', type: 'sel', range: [5,100,5], cat: 'Mental' },
-            { id: 'journ', label: 'Journaled', type: 'chk', cat: 'Mental' },
-            { id: 'fin', label: 'Finshots', type: 'chk', cat: 'Mental' },
-            { id: 'work', label: 'Workout', type: 'tags', options: ["Back","Chest","Legs","Biceps","Run","Core"], cat: 'Physical' },
+            { id: 'm_push', label: 'Morning Pushups', type: 'sel', range: [0,150,5], cat: 'Morning' },
+            { id: 'm_squat', label: 'Morning Squats', type: 'sel', range: [0,150,5], cat: 'Morning' },
+            { id: 'med', label: 'Meditation', type: 'num', ph: 'Type here', cat: 'Mental' },
+            { id: 'work', label: 'Workout', type: 'work', cat: 'Physical' },
             { id: 'steps', label: 'Steps', type: 'sel', range: [8000, 20000, 500], cat: 'Physical' },
-            { id: 'hang', label: 'Dead Hang', type: 'sel', range: [0, 300, 5], cat: 'Physical' },
             { id: 'prot', label: 'Protein', type: 'sel', range: [90, 200, 5], cat: 'Nutrition' },
-            { id: 'creat', label: 'Creatine', type: 'sel', range: [0, 10, 1], cat: 'Nutrition' },
-            { id: 'water', label: 'Water', type: 'sel', range: [2, 5, 0.25], cat: 'Nutrition' },
             { id: 'alc', label: 'No Alcohol', type: 'chk', cat: 'Vices' },
-            { id: 'fried', label: 'No Fried', type: 'chk', cat: 'Vices' },
-            { id: 'sug', label: 'No Sugar', type: 'chk', cat: 'Vices' },
             { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('pro_v12')) || {};
+        let db = JSON.parse(localStorage.getItem('ultimate_v13')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
+        let currentPeriod = 'all';
 
         function renderLog() {
             document.getElementById('quote').innerText = quotes[new Date().getDate() % quotes.length];
             document.getElementById('log-date').innerText = activeDate;
-            const container = document.getElementById('log-container'); container.innerHTML = '';
-            
+            const list = document.getElementById('log-list'); list.innerHTML = '';
             const cats = [...new Set(schema.map(s => s.cat))];
+
             cats.forEach(c => {
                 let html = `<div class="glass p-6"><h3 class="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
                 schema.filter(s => s.cat === c).forEach(s => {
@@ -171,11 +159,8 @@
                             <span class="text-sm font-bold ${chk?'text-white':'text-zinc-500'}">${s.label}</span>
                         </div>`;
                     
-                    if(s.type === 'tags') {
-                        html += `<div class="flex flex-wrap gap-2 justify-end max-w-[150px]">`;
-                        const cur = val ? val.split(',') : [];
-                        s.options.forEach(o => html += `<div onclick="tag('${s.id}','${o}')" class="w-tag ${cur.includes(o)?'selected':''}">${o}</div>`);
-                        html += `</div>`;
+                    if(s.type === 'work') {
+                        html += `<button onclick="openWorkout()" class="text-[10px] font-black text-green-400 border border-green-500/30 px-3 py-2 rounded-lg">${val ? val.replace(/,/g, ' • ') : 'SELECT'}</button>`;
                     } else if(s.type === 'sel') {
                         html += `<select onchange="upd('${s.id}','v',this.value)"><option value="">-</option>`;
                         for(let i=s.range[0]; i<=s.range[1]; i+=s.range[2]) html += `<option value="${i}" ${val==i?'selected':''}>${i}</option>`;
@@ -185,77 +170,115 @@
                     }
                     html += `</div>`;
                 });
-                container.innerHTML += html + `</div></div>`;
+                list.innerHTML += html + `</div></div>`;
             });
             updateScore();
         }
 
         function toggle(id) { if(!db[activeDate]) db[activeDate] = {}; db[activeDate][id+'_c'] = !db[activeDate][id+'_c']; renderLog(); }
-        function tag(id, t) {
-            if(!db[activeDate]) db[activeDate] = {};
-            let tags = db[activeDate][id+'_v'] ? db[activeDate][id+'_v'].split(',') : [];
-            tags = tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t];
-            db[activeDate][id+'_v'] = tags.join(','); renderLog();
-        }
         function upd(id, k, v) { if(!db[activeDate]) db[activeDate] = {}; db[activeDate][id+'_'+k] = v; updateScore(); }
+        
+        function openWorkout() {
+            const area = document.getElementById('work-options'); area.innerHTML = '';
+            const cur = (db[activeDate] && db[activeDate]['work_v']) ? db[activeDate]['work_v'].split(',') : [];
+            workOptions.forEach(opt => {
+                const isSel = cur.includes(opt);
+                area.innerHTML += `<div onclick="toggleWorkTag('${opt}')" class="w-btn ${isSel?'selected':''}">${opt}</div>`;
+            });
+            document.getElementById('work-modal').style.display = 'flex';
+        }
+
+        function toggleWorkTag(t) {
+            let tags = (db[activeDate] && db[activeDate]['work_v']) ? db[activeDate]['work_v'].split(',') : [];
+            tags = tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t];
+            upd('work', 'v', tags.join(',')); openWorkout(); renderLog();
+        }
+
         function updateScore() {
             const d = db[activeDate] || {};
             let done = schema.filter(s => d[s.id+'_c']).length;
-            document.getElementById('score-circle').innerText = Math.round((done/schema.length)*100)+'%';
+            const pct = Math.round((done/schema.length)*100);
+            document.getElementById('score-val').innerText = pct+'%';
+            db[activeDate] = {...db[activeDate], daily_score: pct};
+        }
+
+        function openCalendar() {
+            const area = document.getElementById('cal-grid-area'); area.innerHTML = '';
+            const y = calView.getFullYear(), m = calView.getMonth();
+            document.getElementById('cal-title').innerText = new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(calView);
+            
+            let html = `<div class="cal-flex mb-2 text-[10px] text-zinc-600 font-black text-center uppercase">
+                ${['S','M','T','W','T','F','S'].map(d=>`<div class="w-[14.2%]">${d}</div>`).join('')}
+            </div><div class="cal-flex">`;
+            
+            const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
+            for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
+            for(let i=1; i<=last; i++) {
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                const dayScore = (db[ds] && db[ds].daily_score) || 0;
+                let status = dayScore >= 80 ? 'day-pass' : (dayScore > 0 ? 'day-fail' : '');
+                html += `<div onclick="jump('${ds}')" class="cal-day ${status} ${ds===activeDate?'bg-white text-black':''}">${i}</div>`;
+            }
+            area.innerHTML = html + '</div>';
+            document.getElementById('cal-modal').style.display = 'flex';
         }
 
         function openHabit(id) {
             const s = schema.find(x => x.id === id);
-            document.getElementById('dt-title').innerText = s.label;
-            const grid = document.getElementById('dt-grid'); grid.innerHTML = '';
-            let count = 0, sum = 0;
-            for(let i=27; i>=0; i--) {
-                const date = new Date(); date.setDate(date.getDate() - i);
-                const ds = date.toISOString().split('T')[0];
+            document.getElementById('dt-name').innerText = s.label;
+            const area = document.getElementById('dt-cal-area'); area.innerHTML = '';
+            
+            const y = new Date().getFullYear(), m = new Date().getMonth();
+            let html = `<p class="text-[10px] font-black text-zinc-500 mb-4 uppercase text-center">${new Intl.DateTimeFormat('en-US',{month:'long'}).format(new Date())}</p>
+                <div class="cal-flex mb-2 text-[9px] text-zinc-700 font-black text-center">
+                ${['S','M','T','W','T','F','S'].map(d=>`<div class="w-[14.2%]">${d}</div>`).join('')}
+            </div><div class="cal-flex">`;
+            
+            const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
+            let sum=0, count=0;
+            for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
+            for(let i=1; i<=last; i++) {
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 const done = db[ds] && db[ds][id+'_c'];
-                const val = db[ds] ? parseFloat(db[ds][id+'_v']) : 0;
-                if(val > 0) { sum += val; count++; }
-                grid.innerHTML += `<div class="cal-day ${done?'day-green':'day-red'}">${date.getDate()}</div>`;
+                if(db[ds] && db[ds][id+'_v']) { sum += parseFloat(db[ds][id+'_v']); count++; }
+                html += `<div class="cal-day ${done?'day-pass':'day-fail'}">${i}</div>`;
             }
-            document.getElementById('dt-avg-d').innerText = count > 0 ? (sum/count).toFixed(1) : '-';
-            document.getElementById('dt-avg-w').innerText = count > 0 ? (sum/(count/7)).toFixed(1) : '-';
+            document.getElementById('dt-avg').innerText = count > 0 ? (sum/count).toFixed(1) : '-';
+            area.innerHTML = html + '</div>';
             document.getElementById('detail-modal').style.display = 'flex';
         }
 
-        function openCalModal() {
-            const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
-            const y = calView.getFullYear(), m = calView.getMonth();
-            document.getElementById('cal-month').innerText = new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(calView);
-            const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
-            for(let i=0; i<first; i++) grid.innerHTML += '<div class="cal-day"></div>';
-            for(let i=1; i<=last; i++) {
-                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                grid.innerHTML += `<div onclick="jump('${ds}')" class="cal-day ${ds===activeDate?'bg-white text-black':''}">${i}</div>`;
-            }
-            document.getElementById('cal-modal').style.display = 'flex';
-        }
-
         function jump(d) { activeDate = d; closeModal('cal-modal'); renderLog(); }
-        function shiftMonth(n) { calView.setMonth(calView.getMonth() + n); openCalModal(); }
+        function changeCal(n) { calView.setMonth(calView.getMonth() + n); openCalendar(); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function setTab(t) {
+        
+        function tab(t) {
             document.getElementById('v-log').classList.toggle('hidden', t !== 'log');
             document.getElementById('v-stats').classList.toggle('hidden', t !== 'stats');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
             document.getElementById('n-'+t).classList.add('active');
             if(t === 'stats') renderStats();
         }
 
+        function openPeriodPicker() { document.getElementById('period-modal').style.display = 'flex'; }
+        function setPeriod(p) { currentPeriod = p; document.getElementById('active-period').innerText = p === 'all' ? 'Lifetime' : p+' Days'; closeModal('period-modal'); renderStats(); }
+
         function renderStats() {
             const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
+            const cutoff = currentPeriod === 'all' ? 0 : new Date().setDate(new Date().getDate() - parseInt(currentPeriod));
+            
             schema.filter(s => s.type !== 'chk').forEach(s => {
                 let sum = 0, count = 0;
-                Object.values(db).forEach(day => { if(day[s.id+'_v']) { sum += parseFloat(day[s.id+'_v']); count++; } });
+                Object.keys(db).forEach(dateStr => {
+                    if(new Date(dateStr) >= cutoff && db[dateStr][s.id+'_v']) {
+                        sum += parseFloat(db[dateStr][s.id+'_v']); count++;
+                    }
+                });
                 grid.innerHTML += `<div class="glass p-6 text-center"><p class="text-[8px] font-black text-zinc-600 mb-2">${s.label} AVG</p><p class="text-2xl font-black text-green-400 italic">${count>0?(sum/count).toFixed(1):0}</p></div>`;
             });
         }
 
-        function save() { localStorage.setItem('pro_v12', JSON.stringify(db)); alert("SAVED."); }
+        function save() { localStorage.setItem('ultimate_v13', JSON.stringify(db)); alert("SESSION COMMITTED."); }
         renderLog();
     </script>
 </body>
