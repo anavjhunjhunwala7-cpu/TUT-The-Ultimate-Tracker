@@ -3,32 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE TRACKER 2026</title>
+    <title>ULTIMATE TRACKER PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --neon: #22c55e; --bg: #050505; --glass: rgba(20, 20, 23, 0.8); }
+        :root { --neon: #22c55e; --bg: #050505; --glass: rgba(22, 22, 25, 0.8); }
         body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
         
         .sticky-header {
             position: sticky; top: 0; z-index: 100;
-            background: linear-gradient(to bottom, #050505 70%, transparent);
-            backdrop-filter: blur(15px); padding: 20px 0 40px;
+            background: linear-gradient(to bottom, #050505 80%, transparent);
+            backdrop-filter: blur(15px); padding: 20px 0 30px;
         }
 
         .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; }
 
-        /* CALENDAR SYSTEM */
+        /* CALENDAR GRID */
         .cal-flex { display: flex; flex-wrap: wrap; width: 100%; }
         .cal-day { 
-            flex: 0 0 14.28%; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex: 0 0 14.28%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
             font-size: 0.75rem; font-weight: 800; border-radius: 8px; transition: 0.2s;
         }
         .day-pass { background: rgba(34, 197, 94, 0.2) !important; color: var(--neon); border: 1px solid var(--neon); }
         .day-fail { background: rgba(239, 68, 68, 0.15) !important; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 
-        /* WORKOUT MODAL TAGS */
         .w-btn { padding: 12px; border-radius: 12px; border: 1px solid #333; font-size: 11px; font-weight: 800; text-align: center; text-transform: uppercase; }
-        .w-btn.selected { background: var(--neon); color: #000; border-color: var(--neon); box-shadow: 0 0 15px rgba(34,197,94,0.4); }
+        .w-btn.selected { background: var(--neon); color: #000; border-color: var(--neon); }
 
         input, select { background: rgba(255,255,255,0.05) !important; color: var(--neon) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 8px; padding: 8px; outline: none; -webkit-appearance: none; }
 
@@ -40,36 +39,58 @@
 <body class="pb-32">
 
     <div id="v-log">
-        <div class="sticky-header text-center px-4">
+        <div class="sticky-header text-center">
             <h1 class="text-[10px] font-black tracking-[0.4em] text-zinc-500 mb-2 uppercase">Ultimate Tracker Pro</h1>
             <p id="quote" class="text-[9px] font-bold text-zinc-400 italic mb-6 px-10"></p>
-            <div class="inline-flex flex-col items-center">
-                <div class="w-20 h-20 rounded-full border border-zinc-800 flex items-center justify-center bg-black">
-                    <span id="score-val" class="text-2xl font-black text-green-400">0%</span>
+            
+            <div class="flex justify-center items-center gap-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 rounded-full border border-zinc-800 flex items-center justify-center bg-black">
+                        <span id="score-val" class="text-lg font-black text-green-400">0%</span>
+                    </div>
+                    <span class="text-[7px] font-black text-zinc-600 mt-1 uppercase tracking-widest">Score</span>
                 </div>
-                <button onclick="openCalendar('jump')" class="mt-4 text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                    <span id="log-date"></span> <span class="text-green-500">▼</span>
-                </button>
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 rounded-full border border-zinc-800 flex items-center justify-center bg-black">
+                        <span id="days-complete" class="text-lg font-black text-white">1</span>
+                    </div>
+                    <span class="text-[7px] font-black text-zinc-600 mt-1 uppercase tracking-widest">Days Logged</span>
+                </div>
             </div>
+
+            <button onclick="openCalendar('jump')" class="mt-4 text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 mx-auto">
+                <span id="log-date-display"></span> <span class="text-green-500">▼</span>
+            </button>
         </div>
 
         <div id="log-list" class="p-4 space-y-6"></div>
-        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400">Lock In</button></div>
+        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400">Save Progress</button></div>
     </div>
 
     <div id="v-stats" class="hidden p-4 space-y-6">
-        <div class="flex flex-col items-center py-6">
+        <div class="flex flex-col items-center py-6 gap-4">
             <button onclick="openPeriodPicker()" class="glass px-8 py-3 text-[10px] font-black text-green-400 uppercase tracking-widest">
-                Timeframe: <span id="active-period">Lifetime</span> ▼
+                <span id="active-period">Lifetime</span> ▼
             </button>
+            <div id="custom-date-row" class="hidden flex gap-2 items-center">
+                <input type="date" id="range-start" onchange="runStats()" class="text-[9px]">
+                <span class="text-zinc-600 text-[10px]">TO</span>
+                <input type="date" id="range-end" onchange="runStats()" class="text-[9px]">
+            </div>
         </div>
+        
+        <div class="glass p-6">
+            <h3 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Historical Activity</h3>
+            <div id="insights-cal-area"></div>
+        </div>
+
         <div id="stats-grid" class="grid grid-cols-2 gap-3"></div>
     </div>
 
     <div id="work-modal" class="modal">
         <div class="p-6 flex justify-between items-center border-b border-white/5">
             <button onclick="closeModal('work-modal')" class="text-2xl">←</button>
-            <h3 class="font-black uppercase text-sm tracking-widest">Select Training</h3>
+            <h3 class="font-black uppercase text-xs">Training Selection</h3>
             <div class="w-8"></div>
         </div>
         <div class="p-6 grid grid-cols-2 gap-3" id="work-options"></div>
@@ -83,10 +104,6 @@
             <div class="w-8"></div>
         </div>
         <div class="p-6 space-y-6">
-            <div class="flex justify-between text-center gap-2">
-                <div class="glass flex-1 p-4"><p class="text-[8px] text-zinc-500 uppercase">Avg</p><p id="dt-avg" class="text-xl font-bold">-</p></div>
-                <div class="glass flex-1 p-4"><p class="text-[8px] text-zinc-500 uppercase">Streak</p><p id="dt-streak" class="text-xl font-bold">0</p></div>
-            </div>
             <div id="dt-cal-area"></div>
         </div>
     </div>
@@ -106,13 +123,12 @@
 
     <div id="period-modal" class="modal">
         <div class="p-6 border-b border-white/5"><button onclick="closeModal('period-modal')" class="text-2xl">←</button></div>
-        <div class="p-6 space-y-3" id="period-list">
+        <div class="p-6 space-y-3">
             <button onclick="setPeriod('7')" class="w-full py-4 glass text-xs font-black uppercase">Last 7 Days</button>
             <button onclick="setPeriod('30')" class="w-full py-4 glass text-xs font-black uppercase">Last 30 Days</button>
-            <button onclick="setPeriod('60')" class="w-full py-4 glass text-xs font-black uppercase">Last 2 Months</button>
             <button onclick="setPeriod('90')" class="w-full py-4 glass text-xs font-black uppercase">Last 3 Months</button>
-            <button onclick="setPeriod('180')" class="w-full py-4 glass text-xs font-black uppercase">Last 6 Months</button>
-            <button onclick="setPeriod('all')" class="w-full py-4 glass text-xs font-black uppercase text-green-400">Lifetime</button>
+            <button onclick="setPeriod('all')" class="w-full py-4 glass text-xs font-black uppercase">Lifetime</button>
+            <button onclick="setPeriod('custom')" class="w-full py-4 glass text-xs font-black uppercase border-dashed border-zinc-700">Custom Range</button>
         </div>
     </div>
 
@@ -122,33 +138,51 @@
     </nav>
 
     <script>
-        const quotes = ["DISCIPLINE IS FREEDOM", "ONE MORE REP", "CONSISTENCY WINS", "STAY HUNGRY"];
+        const quotes = ["DISCIPLINE IS FREEDOM", "CONSISTENCY OVER EVERYTHING", "WIN THE MORNING", "STAY HUNGRY"];
         const workOptions = ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Walk", "Run", "Other"];
-        const schema = [
-            { id: 'm_push', label: 'Morning Pushups', type: 'sel', range: [0,150,5], cat: 'Morning' },
-            { id: 'm_squat', label: 'Morning Squats', type: 'sel', range: [0,150,5], cat: 'Morning' },
-            { id: 'med', label: 'Meditation', type: 'num', ph: 'Type here', cat: 'Mental' },
+        const fullSchema = [
+            { id: 'm_push', label: 'Morning Pushups', type: 'sel', range: [0,150,5], cat: 'Morning Rituals' },
+            { id: 'm_squat', label: 'Morning Squats', type: 'sel', range: [0,150,5], cat: 'Morning Rituals' },
+            { id: 'neeti', label: 'Jal Neeti', type: 'chk', cat: 'Morning Rituals' },
+            { id: 'floss', label: 'Flossing', type: 'chk', cat: 'Morning Rituals' },
+            { id: 'mouth', label: 'Mouth Taping', type: 'chk', cat: 'Morning Rituals' },
+            { id: 'med', label: 'Meditation', type: 'num', ph: 'Type Here', cat: 'Mental' },
+            { id: 'hanuman', label: 'Hanuman Chalisa', type: 'chk', cat: 'Mental' },
+            { id: 'news', label: 'Newspaper', type: 'chk', cat: 'Mental' },
+            { id: 'book', label: 'Read Book', type: 'sel', range: [5,100,5], cat: 'Mental' },
+            { id: 'journ', label: 'Journaled', type: 'chk', cat: 'Mental' },
+            { id: 'fin', label: 'Finshots', type: 'chk', cat: 'Mental' },
             { id: 'work', label: 'Workout', type: 'work', cat: 'Physical' },
             { id: 'steps', label: 'Steps', type: 'sel', range: [8000, 20000, 500], cat: 'Physical' },
+            { id: 'hang', label: 'Dead Hang', type: 'sel', range: [0, 300, 5], cat: 'Physical' },
             { id: 'prot', label: 'Protein', type: 'sel', range: [90, 200, 5], cat: 'Nutrition' },
+            { id: 'creat', label: 'Creatine', type: 'sel', range: [0, 10, 1], cat: 'Nutrition' },
+            { id: 'water', label: 'Water', type: 'sel', range: [2, 5, 0.25], cat: 'Nutrition' },
             { id: 'alc', label: 'No Alcohol', type: 'chk', cat: 'Vices' },
+            { id: 'fried', label: 'No Fried', type: 'chk', cat: 'Vices' },
+            { id: 'sug', label: 'No Sugar', type: 'chk', cat: 'Vices' },
             { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('ultimate_v13')) || {};
+        let db = JSON.parse(localStorage.getItem('ultra_v14')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
-        let currentPeriod = 'all';
+        let statPeriod = 'all';
+
+        function fmtDate(ds) {
+            const d = new Date(ds);
+            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
 
         function renderLog() {
             document.getElementById('quote').innerText = quotes[new Date().getDate() % quotes.length];
-            document.getElementById('log-date').innerText = activeDate;
+            document.getElementById('log-date-display').innerText = fmtDate(activeDate);
             const list = document.getElementById('log-list'); list.innerHTML = '';
-            const cats = [...new Set(schema.map(s => s.cat))];
+            const cats = [...new Set(fullSchema.map(s => s.cat))];
 
             cats.forEach(c => {
                 let html = `<div class="glass p-6"><h3 class="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
-                schema.filter(s => s.cat === c).forEach(s => {
+                fullSchema.filter(s => s.cat === c).forEach(s => {
                     const d = db[activeDate] || {};
                     const chk = d[s.id+'_c'] || false;
                     const val = d[s.id+'_v'] || '';
@@ -196,89 +230,93 @@
 
         function updateScore() {
             const d = db[activeDate] || {};
-            let done = schema.filter(s => d[s.id+'_c']).length;
-            const pct = Math.round((done/schema.length)*100);
+            let done = fullSchema.filter(s => d[s.id+'_c']).length;
+            const pct = Math.round((done/fullSchema.length)*100);
             document.getElementById('score-val').innerText = pct+'%';
             db[activeDate] = {...db[activeDate], daily_score: pct};
+
+            const dates = Object.keys(db).sort();
+            if(dates.length > 0) {
+                const start = new Date(dates[0]);
+                const diff = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24)) + 1;
+                document.getElementById('days-complete').innerText = diff;
+            }
         }
 
         function openCalendar() {
-            const area = document.getElementById('cal-grid-area'); area.innerHTML = '';
-            const y = calView.getFullYear(), m = calView.getMonth();
-            document.getElementById('cal-title').innerText = new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(calView);
-            
-            let html = `<div class="cal-flex mb-2 text-[10px] text-zinc-600 font-black text-center uppercase">
-                ${['S','M','T','W','T','F','S'].map(d=>`<div class="w-[14.2%]">${d}</div>`).join('')}
-            </div><div class="cal-flex">`;
-            
-            const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
-            for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
-            for(let i=1; i<=last; i++) {
-                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                const dayScore = (db[ds] && db[ds].daily_score) || 0;
-                let status = dayScore >= 80 ? 'day-pass' : (dayScore > 0 ? 'day-fail' : '');
-                html += `<div onclick="jump('${ds}')" class="cal-day ${status} ${ds===activeDate?'bg-white text-black':''}">${i}</div>`;
-            }
-            area.innerHTML = html + '</div>';
+            renderGenericCal('cal-grid-area', calView, (ds) => jump(ds));
             document.getElementById('cal-modal').style.display = 'flex';
         }
 
-        function openHabit(id) {
-            const s = schema.find(x => x.id === id);
-            document.getElementById('dt-name').innerText = s.label;
-            const area = document.getElementById('dt-cal-area'); area.innerHTML = '';
-            
-            const y = new Date().getFullYear(), m = new Date().getMonth();
-            let html = `<p class="text-[10px] font-black text-zinc-500 mb-4 uppercase text-center">${new Intl.DateTimeFormat('en-US',{month:'long'}).format(new Date())}</p>
-                <div class="cal-flex mb-2 text-[9px] text-zinc-700 font-black text-center">
-                ${['S','M','T','W','T','F','S'].map(d=>`<div class="w-[14.2%]">${d}</div>`).join('')}
-            </div><div class="cal-flex">`;
-            
+        function renderGenericCal(targetId, dateObj, callback) {
+            const area = document.getElementById(targetId); area.innerHTML = '';
+            const y = dateObj.getFullYear(), m = dateObj.getMonth();
+            document.getElementById('cal-title').innerText = new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(dateObj);
+            let html = `<div class="cal-flex mb-2 text-[10px] text-zinc-600 font-black text-center uppercase">${['S','M','T','W','T','F','S'].map(d=>`<div class="w-[14.2%]">${d}</div>`).join('')}</div><div class="cal-flex">`;
             const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
-            let sum=0, count=0;
             for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
             for(let i=1; i<=last; i++) {
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                const done = db[ds] && db[ds][id+'_c'];
-                if(db[ds] && db[ds][id+'_v']) { sum += parseFloat(db[ds][id+'_v']); count++; }
-                html += `<div class="cal-day ${done?'day-pass':'day-fail'}">${i}</div>`;
+                const score = (db[ds] && db[ds].daily_score) || 0;
+                let status = score >= 80 ? 'day-pass' : (score > 0 ? 'day-fail' : '');
+                html += `<div onclick="(${callback})('${ds}')" class="cal-day ${status} ${ds===activeDate?'bg-white text-black':''}">${i}</div>`;
             }
-            document.getElementById('dt-avg').innerText = count > 0 ? (sum/count).toFixed(1) : '-';
             area.innerHTML = html + '</div>';
+        }
+
+        function openHabit(id) {
+            const s = fullSchema.find(x => x.id === id);
+            document.getElementById('dt-name').innerText = s.label;
+            renderGenericCal('dt-cal-area', new Date(), (ds) => console.log(ds));
             document.getElementById('detail-modal').style.display = 'flex';
         }
 
-        function jump(d) { activeDate = d; closeModal('cal-modal'); renderLog(); }
-        function changeCal(n) { calView.setMonth(calView.getMonth() + n); openCalendar(); }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
         function tab(t) {
             document.getElementById('v-log').classList.toggle('hidden', t !== 'log');
             document.getElementById('v-stats').classList.toggle('hidden', t !== 'stats');
             document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
             document.getElementById('n-'+t).classList.add('active');
-            if(t === 'stats') renderStats();
+            if(t === 'stats') runStats();
         }
 
         function openPeriodPicker() { document.getElementById('period-modal').style.display = 'flex'; }
-        function setPeriod(p) { currentPeriod = p; document.getElementById('active-period').innerText = p === 'all' ? 'Lifetime' : p+' Days'; closeModal('period-modal'); renderStats(); }
+        
+        function setPeriod(p) { 
+            statPeriod = p; 
+            document.getElementById('active-period').innerText = p === 'custom' ? 'Custom Range' : (p === 'all' ? 'Lifetime' : p+' Days');
+            document.getElementById('custom-date-row').classList.toggle('hidden', p !== 'custom');
+            closeModal('period-modal'); 
+            runStats(); 
+        }
 
-        function renderStats() {
+        function runStats() {
+            renderGenericCal('insights-cal-area', new Date(), (ds) => jump(ds));
             const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
-            const cutoff = currentPeriod === 'all' ? 0 : new Date().setDate(new Date().getDate() - parseInt(currentPeriod));
-            
-            schema.filter(s => s.type !== 'chk').forEach(s => {
+            let start = 0, end = Infinity;
+            if(statPeriod === 'custom') {
+                start = new Date(document.getElementById('range-start').value || 0).getTime();
+                end = new Date(document.getElementById('range-end').value || '2099-01-01').getTime();
+            } else if (statPeriod !== 'all') {
+                start = new Date().setDate(new Date().getDate() - parseInt(statPeriod));
+            }
+
+            fullSchema.filter(s => s.type !== 'chk').forEach(s => {
                 let sum = 0, count = 0;
-                Object.keys(db).forEach(dateStr => {
-                    if(new Date(dateStr) >= cutoff && db[dateStr][s.id+'_v']) {
-                        sum += parseFloat(db[dateStr][s.id+'_v']); count++;
+                Object.keys(db).forEach(d => {
+                    const time = new Date(d).getTime();
+                    if(time >= start && time <= end && db[d][s.id+'_v']) {
+                        sum += parseFloat(db[d][s.id+'_v']); count++;
                     }
                 });
                 grid.innerHTML += `<div class="glass p-6 text-center"><p class="text-[8px] font-black text-zinc-600 mb-2">${s.label} AVG</p><p class="text-2xl font-black text-green-400 italic">${count>0?(sum/count).toFixed(1):0}</p></div>`;
             });
         }
 
-        function save() { localStorage.setItem('ultimate_v13', JSON.stringify(db)); alert("SESSION COMMITTED."); }
+        function jump(d) { activeDate = d; closeModal('cal-modal'); tab('log'); renderLog(); }
+        function changeCal(n) { calView.setMonth(calView.getMonth() + n); openCalendar(); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function save() { localStorage.setItem('ultra_v14', JSON.stringify(db)); alert("CHAIN UPDATED."); }
+
         renderLog();
     </script>
 </body>
