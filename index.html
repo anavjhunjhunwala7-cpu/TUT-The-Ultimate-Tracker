@@ -6,59 +6,47 @@
     <title>ULTIMATE TRACKER PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --neon: #22c55e; --bg: #050505; --glass: rgba(22, 22, 25, 0.98); }
-        body { background: var(--bg); color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+        :root { --neon: #22c55e; --bg: #050505; --glass: rgba(22, 22, 25, 0.7); }
+        body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
         
-        /* STICKY HEADER (Freeze Pane) */
+        /* SMOOTH FREEZE PANE */
         .sticky-header {
             position: sticky; top: 0; z-index: 100;
-            background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding: 20px 0;
+            background: linear-gradient(to bottom, rgba(5,5,5,1) 60%, rgba(5,5,5,0.8) 80%, transparent);
+            backdrop-filter: blur(12px); padding: 20px 0 30px;
         }
 
         .glass { 
-            background: var(--glass); backdrop-filter: blur(25px); 
-            border: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.2);
-            border-radius: 1.5rem; 
+            background: var(--glass); backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; 
         }
 
-        /* FIXED 7-COLUMN FLEX GRID */
-        .cal-flex { display: flex; flex-wrap: wrap; width: 100%; gap: 0; }
-        .cal-day { 
-            flex: 0 0 14.28%; aspect-ratio: 1/1; 
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.8rem; font-weight: 800; border: 0.5px solid rgba(255,255,255,0.05);
-        }
-        .day-active { background: var(--neon) !important; color: #000 !important; border-radius: 8px; font-weight: 900; }
-        .day-has-data { color: var(--neon); }
-
-        /* INPUTS & SELECTS - CENTERED */
-        input, select {
-            background: rgba(255,255,255,0.07) !important; color: var(--neon) !important;
-            border: 1px solid rgba(255,255,255,0.15) !important; border-radius: 10px;
-            padding: 10px; font-size: 0.9rem; text-align: center; text-align-last: center; outline: none;
-        }
-
-        /* WORKOUT TAGS - V1 STYLE */
+        /* WORKOUT TAGS - V1 STYLE (PREVIOUS BEST) */
         .w-tag { 
-            padding: 8px 16px; border-radius: 12px; border: 1px solid #333; 
-            font-size: 11px; font-weight: 800; color: #71717a; text-transform: uppercase;
+            padding: 8px 14px; border-radius: 10px; border: 1px solid #333; 
+            font-size: 11px; font-weight: 800; color: #555; text-transform: uppercase; transition: 0.2s;
         }
-        .w-tag.selected { 
-            background: rgba(34, 197, 94, 0.2); border-color: var(--neon); color: var(--neon); 
+        .w-tag.selected { background: var(--neon); border-color: var(--neon); color: #000; box-shadow: 0 0 15px rgba(34,197,94,0.3); }
+
+        /* CALENDAR GRIDS */
+        .cal-flex { display: flex; flex-wrap: wrap; width: 100%; }
+        .cal-day { 
+            flex: 0 0 14.28%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 800; border-radius: 8px;
+        }
+        .day-green { background: rgba(34, 197, 94, 0.25); color: var(--neon); border: 1px solid var(--neon); }
+        .day-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* REMOVE SELECT ARROWS */
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        input, select {
+            background: rgba(255,255,255,0.05) !important; color: var(--neon) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 8px;
+            padding: 8px; text-align: center; outline: none;
         }
 
-        /* CHECKBOX */
-        .cb-box { width: 28px; height: 28px; border: 2px solid #444; border-radius: 8px; position: relative; flex-shrink: 0; }
-        .cb-box.checked { background: var(--neon); border-color: var(--neon); }
-        .cb-box.checked::after {
-            content: ''; position: absolute; left: 9px; top: 4px; width: 6px; height: 12px;
-            border: solid black; border-width: 0 3px 3px 0; transform: rotate(45deg);
-        }
-
-        .modal { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
-        .nav-btn { flex: 1; text-align: center; font-size: 11px; font-weight: 900; color: #555; letter-spacing: 1px; }
+        .modal { position: fixed; inset: 0; background: #050505; z-index: 2000; display: none; flex-direction: column; overflow-y: auto; }
+        .nav-btn { flex: 1; text-align: center; font-size: 10px; font-weight: 900; color: #444; letter-spacing: 1px; }
         .nav-btn.active { color: var(--neon); }
     </style>
 </head>
@@ -66,64 +54,82 @@
 
     <div id="v-log">
         <div class="sticky-header text-center">
+            <h1 class="text-[10px] font-black tracking-[0.5em] text-zinc-500 mb-2">ULTIMATE TRACKER PRO</h1>
+            <p id="quote" class="text-[9px] font-bold text-zinc-400 italic mb-6 px-10"></p>
             <div class="inline-flex flex-col items-center">
-                <div class="w-24 h-24 rounded-full border-2 border-green-500/30 flex items-center justify-center mb-2">
-                    <span id="header-score" class="text-3xl font-black text-green-400">0%</span>
+                <div class="w-20 h-20 rounded-full border border-green-500/20 flex items-center justify-center bg-black shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+                    <span id="score-circle" class="text-2xl font-black text-green-400">0%</span>
                 </div>
-                <button onclick="openCalendar()" class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
-                    <span id="active-date-label"></span>
-                    <span class="text-green-500">▼</span>
+                <button onclick="openCalModal('jump')" class="mt-4 text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                    <span id="log-date"></span> <span class="text-green-500 text-[8px]">▼</span>
                 </button>
             </div>
         </div>
 
-        <div id="habit-container" class="p-4 space-y-6"></div>
-        
-        <div class="p-4">
-            <button onclick="save()" class="w-full py-6 glass font-black uppercase text-green-400 border-green-500/30 shadow-xl">Commit Session</button>
-        </div>
+        <div id="log-container" class="p-4 space-y-6"></div>
+        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400 tracking-widest">Commit</button></div>
     </div>
 
     <div id="v-stats" class="hidden p-4 space-y-6">
-        <h2 class="text-2xl font-black italic text-white pt-4">PERFORMANCE</h2>
-        <div id="insights-content" class="grid grid-cols-2 gap-3"></div>
-        
-        <div class="glass p-6">
-            <h3 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Historical Activity</h3>
-            <button onclick="openCalendar()" class="w-full py-4 bg-zinc-900 rounded-xl text-xs font-bold">Open Full Calendar Overlay</button>
+        <div class="flex flex-col items-center py-6 gap-4">
+            <button onclick="openPeriodModal()" class="glass px-6 py-3 text-[10px] font-black tracking-widest text-green-400 uppercase">
+                Select Period ▼
+            </button>
+            <p id="period-label" class="text-[9px] font-black text-zinc-500 uppercase tracking-widest">LIFETIME INCEPTION</p>
+        </div>
+        <div id="stats-grid" class="grid grid-cols-2 gap-3"></div>
+    </div>
+
+    <div id="detail-modal" class="modal">
+        <div class="p-6 flex justify-between items-center border-b border-white/5">
+            <button onclick="closeModal('detail-modal')" class="text-2xl text-zinc-500">←</button>
+            <h3 id="dt-title" class="font-black italic uppercase text-green-400 tracking-tighter"></h3>
+            <div class="w-8"></div>
+        </div>
+        <div class="p-6 space-y-8">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-4 text-center">
+                    <p class="text-[8px] font-black text-zinc-500 uppercase mb-1">Daily Avg</p>
+                    <p id="dt-avg-d" class="text-xl font-black text-white">-</p>
+                </div>
+                <div class="glass p-4 text-center">
+                    <p class="text-[8px] font-black text-zinc-500 uppercase mb-1">Weekly Avg</p>
+                    <p id="dt-avg-w" class="text-xl font-black text-white">-</p>
+                </div>
+            </div>
+            <div class="cal-flex text-[9px] font-black text-zinc-600 mb-2 text-center uppercase">
+                <div class="w-[14.2%]">S</div><div class="w-[14.2%]">M</div><div class="w-[14.2%]">T</div><div class="w-[14.2%]">W</div><div class="w-[14.2%]">T</div><div class="w-[14.2%]">F</div><div class="w-[14.2%]">S</div>
+            </div>
+            <div id="dt-grid" class="cal-flex"></div>
         </div>
     </div>
 
     <div id="cal-modal" class="modal">
-        <div class="p-6 flex justify-between items-center border-b border-white/10">
-            <button onclick="closeModal('cal-modal')" class="text-zinc-500 font-black">← BACK</button>
+        <div class="p-6 flex justify-between items-center border-b border-white/5">
+            <button onclick="closeModal('cal-modal')" class="text-2xl">←</button>
             <div class="flex items-center gap-4">
-                <button onclick="moveCal(-1)" class="font-bold">◄</button>
-                <span id="cal-month-name" class="font-black uppercase tracking-widest text-sm"></span>
-                <button onclick="moveCal(1)" class="font-bold">►</button>
+                <button onclick="shiftMonth(-1)" class="font-black text-zinc-500">◄</button>
+                <span id="cal-month" class="font-black uppercase tracking-widest text-xs"></span>
+                <button onclick="shiftMonth(1)" class="font-black text-zinc-500">►</button>
             </div>
-            <div class="w-12"></div>
+            <div class="w-8"></div>
         </div>
-        <div class="p-4">
-            <div class="cal-flex text-[10px] font-black text-zinc-600 mb-2 text-center">
-                <div class="w-[14.28%]">S</div><div class="w-[14.28%]">M</div><div class="w-[14.28%]">T</div><div class="w-[14.28%]">W</div><div class="w-[14.28%]">T</div><div class="w-[14.28%]">F</div><div class="w-[14.28%]">S</div>
-            </div>
-            <div id="modal-grid" class="cal-flex"></div>
-        </div>
+        <div class="p-4"><div id="cal-grid" class="cal-flex"></div></div>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/10 flex p-6 pb-10 z-[1000]">
-        <div onclick="setTab('log')" id="n-log" class="nav-btn active">TRACKER</div>
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-white/5 flex p-6 pb-10 z-[1000]">
+        <div onclick="setTab('log')" id="n-log" class="nav-btn active">TRACK</div>
         <div onclick="setTab('stats')" id="n-stats" class="nav-btn">INSIGHTS</div>
     </nav>
 
     <script>
+        const quotes = ["DISCIPLINE = FREEDOM", "STAY UNCOMFORTABLE", "WIN THE MORNING", "HARD WORK WORKS", "ONE MORE REP"];
         const schema = [
-            { id: 'm_push', label: 'Morning Pushups', type: 'sel', range: [0,150,5], cat: 'Morning Rituals' },
-            { id: 'm_squat', label: 'Morning Squats', type: 'sel', range: [0,150,5], cat: 'Morning Rituals' },
-            { id: 'neeti', label: 'Jal Neeti', type: 'chk', cat: 'Morning Rituals' },
-            { id: 'floss', label: 'Flossing', type: 'chk', cat: 'Morning Rituals' },
-            { id: 'mouth', label: 'Mouth Taping', type: 'chk', cat: 'Morning Rituals' },
+            { id: 'm_push', label: 'Morning Pushups', type: 'sel', range: [0,150,5], cat: 'Rituals' },
+            { id: 'm_squat', label: 'Morning Squats', type: 'sel', range: [0,150,5], cat: 'Rituals' },
+            { id: 'neeti', label: 'Jal Neeti', type: 'chk', cat: 'Rituals' },
+            { id: 'floss', label: 'Flossing', type: 'chk', cat: 'Rituals' },
+            { id: 'mouth', label: 'Mouth Taping', type: 'chk', cat: 'Rituals' },
             { id: 'med', label: 'Meditation', type: 'num', ph: 'Type Here', cat: 'Mental' },
             { id: 'hanuman', label: 'Hanuman Chalisa', type: 'chk', cat: 'Mental' },
             { id: 'news', label: 'Newspaper', type: 'chk', cat: 'Mental' },
@@ -142,48 +148,40 @@
             { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('ultimate_pro_v11')) || {};
+        let db = JSON.parse(localStorage.getItem('pro_v12')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
-        let calDate = new Date();
-
-        function fmtDate(s) {
-            const d = new Date(s);
-            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).toUpperCase();
-        }
+        let calView = new Date();
 
         function renderLog() {
-            document.getElementById('active-date-label').innerText = fmtDate(activeDate);
-            const container = document.getElementById('habit-container');
-            container.innerHTML = '';
+            document.getElementById('quote').innerText = quotes[new Date().getDate() % quotes.length];
+            document.getElementById('log-date').innerText = activeDate;
+            const container = document.getElementById('log-container'); container.innerHTML = '';
             
             const cats = [...new Set(schema.map(s => s.cat))];
             cats.forEach(c => {
-                let html = `<div class="glass p-6"><h3 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
+                let html = `<div class="glass p-6"><h3 class="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
                 schema.filter(s => s.cat === c).forEach(s => {
-                    const data = db[activeDate] || {};
-                    const checked = data[s.id + '_c'] || false;
-                    const val = data[s.id + '_v'] || '';
+                    const d = db[activeDate] || {};
+                    const chk = d[s.id+'_c'] || false;
+                    const val = d[s.id+'_v'] || '';
 
                     html += `<div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4" onclick="toggleChk('${s.id}')">
-                            <div class="cb-box ${checked?'checked':''}"></div>
-                            <span class="text-sm font-bold ${checked?'text-white':'text-zinc-500'}">${s.label}</span>
+                        <div class="flex items-center gap-4" onclick="openHabit('${s.id}')">
+                            <div onclick="event.stopPropagation(); toggle('${s.id}')" class="w-6 h-6 border-2 border-zinc-700 rounded-md ${chk?'bg-green-500 border-green-500':''}"></div>
+                            <span class="text-sm font-bold ${chk?'text-white':'text-zinc-500'}">${s.label}</span>
                         </div>`;
                     
-                    if(s.type === 'sel') {
+                    if(s.type === 'tags') {
+                        html += `<div class="flex flex-wrap gap-2 justify-end max-w-[150px]">`;
+                        const cur = val ? val.split(',') : [];
+                        s.options.forEach(o => html += `<div onclick="tag('${s.id}','${o}')" class="w-tag ${cur.includes(o)?'selected':''}">${o}</div>`);
+                        html += `</div>`;
+                    } else if(s.type === 'sel') {
                         html += `<select onchange="upd('${s.id}','v',this.value)"><option value="">-</option>`;
                         for(let i=s.range[0]; i<=s.range[1]; i+=s.range[2]) html += `<option value="${i}" ${val==i?'selected':''}>${i}</option>`;
                         html += `</select>`;
                     } else if(s.type === 'num') {
-                        html += `<input type="number" placeholder="${s.ph}" value="${val}" oninput="upd('${s.id}','v',this.value)" style="width:110px">`;
-                    } else if(s.type === 'tags') {
-                        html += `<div class="flex flex-wrap gap-2 justify-end max-w-[160px]">`;
-                        const current = val ? val.split(',') : [];
-                        s.options.forEach(opt => {
-                            const isSel = current.includes(opt);
-                            html += `<div onclick="toggleTag('${s.id}','${opt}')" class="w-tag ${isSel?'selected':''}">${opt}</div>`;
-                        });
-                        html += `</div>`;
+                        html += `<input type="number" placeholder="${s.ph}" value="${val}" oninput="upd('${s.id}','v',this.value)" style="width:100px">`;
                     }
                     html += `</div>`;
                 });
@@ -192,64 +190,72 @@
             updateScore();
         }
 
-        function toggleChk(id) {
-            if(!db[activeDate]) db[activeDate] = {};
-            db[activeDate][id+'_c'] = !db[activeDate][id+'_c'];
-            renderLog();
-        }
-
-        function toggleTag(id, tag) {
+        function toggle(id) { if(!db[activeDate]) db[activeDate] = {}; db[activeDate][id+'_c'] = !db[activeDate][id+'_c']; renderLog(); }
+        function tag(id, t) {
             if(!db[activeDate]) db[activeDate] = {};
             let tags = db[activeDate][id+'_v'] ? db[activeDate][id+'_v'].split(',') : [];
-            tags = tags.includes(tag) ? tags.filter(t => t !== tag) : [...tags, tag];
-            db[activeDate][id+'_v'] = tags.join(',');
-            renderLog();
+            tags = tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t];
+            db[activeDate][id+'_v'] = tags.join(','); renderLog();
         }
-
         function upd(id, k, v) { if(!db[activeDate]) db[activeDate] = {}; db[activeDate][id+'_'+k] = v; updateScore(); }
-
         function updateScore() {
-            const data = db[activeDate] || {};
-            let done = schema.filter(s => data[s.id + '_c']).length;
-            document.getElementById('header-score').innerText = Math.round((done / schema.length) * 100) + '%';
+            const d = db[activeDate] || {};
+            let done = schema.filter(s => d[s.id+'_c']).length;
+            document.getElementById('score-circle').innerText = Math.round((done/schema.length)*100)+'%';
         }
 
-        function setTab(t) {
-            document.getElementById('v-log').classList.toggle('hidden', t !== 'log');
-            document.getElementById('v-stats').classList.toggle('hidden', t !== 'stats');
-            document.getElementById('n-log').classList.toggle('active', t === 'log');
-            document.getElementById('n-stats').classList.toggle('active', t === 'stats');
-            if(t==='stats') renderInsights();
+        function openHabit(id) {
+            const s = schema.find(x => x.id === id);
+            document.getElementById('dt-title').innerText = s.label;
+            const grid = document.getElementById('dt-grid'); grid.innerHTML = '';
+            let count = 0, sum = 0;
+            for(let i=27; i>=0; i--) {
+                const date = new Date(); date.setDate(date.getDate() - i);
+                const ds = date.toISOString().split('T')[0];
+                const done = db[ds] && db[ds][id+'_c'];
+                const val = db[ds] ? parseFloat(db[ds][id+'_v']) : 0;
+                if(val > 0) { sum += val; count++; }
+                grid.innerHTML += `<div class="cal-day ${done?'day-green':'day-red'}">${date.getDate()}</div>`;
+            }
+            document.getElementById('dt-avg-d').innerText = count > 0 ? (sum/count).toFixed(1) : '-';
+            document.getElementById('dt-avg-w').innerText = count > 0 ? (sum/(count/7)).toFixed(1) : '-';
+            document.getElementById('detail-modal').style.display = 'flex';
         }
 
-        function renderInsights() {
-            const area = document.getElementById('insights-content'); area.innerHTML = '';
-            schema.filter(s => s.type === 'sel' || s.type === 'num').forEach(h => {
-                let sum = 0, count = 0;
-                Object.values(db).forEach(day => { if(day[h.id+'_v']) { sum += parseFloat(day[h.id+'_v']); count++; } });
-                const avg = count > 0 ? (sum / count).toFixed(1) : 0;
-                area.innerHTML += `<div class="glass p-6 text-center"><div class="text-[9px] font-black text-zinc-600 uppercase mb-2">${h.label} Avg</div><div class="text-2xl font-black italic text-green-400">${avg}</div></div>`;
-            });
-        }
-
-        function openCalendar() {
-            const grid = document.getElementById('modal-grid'); grid.innerHTML = '';
-            const y = calDate.getFullYear(), m = calDate.getMonth();
-            document.getElementById('cal-month-name').innerText = new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(calDate);
+        function openCalModal() {
+            const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
+            const y = calView.getFullYear(), m = calView.getMonth();
+            document.getElementById('cal-month').innerText = new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(calView);
             const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
-            for(let i=0; i<first; i++) grid.innerHTML += '<div class="cal-day opacity-0"></div>';
+            for(let i=0; i<first; i++) grid.innerHTML += '<div class="cal-day"></div>';
             for(let i=1; i<=last; i++) {
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                grid.innerHTML += `<div onclick="jump('${ds}')" class="cal-day ${ds===activeDate?'day-active':''} ${db[ds]?'day-has-data':''}">${i}</div>`;
+                grid.innerHTML += `<div onclick="jump('${ds}')" class="cal-day ${ds===activeDate?'bg-white text-black':''}">${i}</div>`;
             }
             document.getElementById('cal-modal').style.display = 'flex';
         }
 
-        function jump(d) { activeDate = d; closeModal('cal-modal'); setTab('log'); renderLog(); }
-        function moveCal(n) { calDate.setMonth(calDate.getMonth() + n); openCalendar(); }
+        function jump(d) { activeDate = d; closeModal('cal-modal'); renderLog(); }
+        function shiftMonth(n) { calView.setMonth(calView.getMonth() + n); openCalModal(); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function save() { localStorage.setItem('ultimate_pro_v11', JSON.stringify(db)); alert("CHAIN UPDATED."); }
+        function setTab(t) {
+            document.getElementById('v-log').classList.toggle('hidden', t !== 'log');
+            document.getElementById('v-stats').classList.toggle('hidden', t !== 'stats');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('n-'+t).classList.add('active');
+            if(t === 'stats') renderStats();
+        }
 
+        function renderStats() {
+            const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
+            schema.filter(s => s.type !== 'chk').forEach(s => {
+                let sum = 0, count = 0;
+                Object.values(db).forEach(day => { if(day[s.id+'_v']) { sum += parseFloat(day[s.id+'_v']); count++; } });
+                grid.innerHTML += `<div class="glass p-6 text-center"><p class="text-[8px] font-black text-zinc-600 mb-2">${s.label} AVG</p><p class="text-2xl font-black text-green-400 italic">${count>0?(sum/count).toFixed(1):0}</p></div>`;
+            });
+        }
+
+        function save() { localStorage.setItem('pro_v12', JSON.stringify(db)); alert("SAVED."); }
         renderLog();
     </script>
 </body>
