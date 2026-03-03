@@ -126,11 +126,11 @@
             { id: 'water', label: 'Water', type: 'pick', options: [1,1.5,2,2.5,3,3.5,4,4.5,5], unit: 'L', cat: 'Nutrition' },
             { id: 'alc', label: 'No Alcohol', type: 'chk', cat: 'Vices' },
             { id: 'fried', label: 'No Fried', type: 'chk', cat: 'Vices' },
-            { id: 'sug', label: 'No Sugar', type: 'chk', cat: 'Vices' }, // Swapped
-            { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' } // Swapped
+            { id: 'sug', label: 'No Sugar', type: 'chk', cat: 'Vices' },
+            { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('ultimate_v24')) || {};
+        let db = JSON.parse(localStorage.getItem('ultimate_v25')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
         let statPeriod = 'all';
@@ -146,7 +146,9 @@
             
             categories.forEach(c => {
                 let html = `<div class="glass p-6"><h3 class="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
-                fullSchema.filter(s => s.cat === c).sort((a,b) => a.label.localeCompare(b.label)).forEach(s => {
+                
+                // FIXED: Sorting removed to respect schema order (Sugar > Smoking)
+                fullSchema.filter(s => s.cat === c).forEach(s => {
                     const d = db[activeDate] || {};
                     const val = d[s.id+'_v'] || '';
                     const isSelect = (s.type === 'pick' || s.type === 'read' || s.type === 'multi');
@@ -177,8 +179,7 @@
             const dates = Object.keys(db).sort();
             if(!dates.length) return;
             const firstDate = new Date(dates[0]);
-            const today = new Date();
-            const gone = Math.floor((today - firstDate) / 86400000) + 1;
+            const gone = Math.floor((new Date() - firstDate) / 86400000) + 1;
             document.getElementById('days-gone').innerText = gone;
 
             let streak = 0;
@@ -355,7 +356,7 @@
             document.getElementById('n-'+t).classList.add('active');
             if(t==='stats') runStats();
         }
-        function save() { localStorage.setItem('ultimate_v24', JSON.stringify(db)); alert("SYCHRONIZED."); }
+        function save() { localStorage.setItem('ultimate_v25', JSON.stringify(db)); alert("SYCHRONIZED."); }
         renderLog();
     </script>
 </body>
