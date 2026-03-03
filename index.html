@@ -9,58 +9,58 @@
         :root { --neon: #22c55e; --bg: #050505; --glass: rgba(22, 22, 25, 0.9); --red: #ef4444; }
         body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
         
-        .sticky-header { position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #050505 90%, transparent); backdrop-filter: blur(15px); padding: 20px 0 30px; }
+        .sticky-header { position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #050505 90%, transparent); backdrop-filter: blur(15px); padding: 15px 0 25px; }
         .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; }
 
-        /* CALENDAR HEATMAP STYLE */
-        .cal-flex { display: flex; flex-wrap: wrap; width: 100%; justify-content: flex-start; }
-        .cal-day { 
-            width: 14.28%; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 0.7rem; font-weight: 900; border-radius: 8px; color: #fff !important; position: relative;
-        }
+        /* HEADER STATS */
+        .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
+        .stat-label { font-size: 7px; font-weight: 900; color: #555; text-transform: uppercase; margin-top: 4px; text-align: center; line-height: 1.1; }
+        .stat-val { font-size: 16px; font-weight: 900; }
+        .streak-top { position: absolute; left: 20px; top: 18px; font-size: 12px; font-weight: 900; color: #fbbf24; letter-spacing: 1px; }
+
+        /* CALENDAR */
+        .cal-flex { display: flex; flex-wrap: wrap; width: 100%; }
+        .cal-day { width: 14.28%; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; border-radius: 8px; position: relative; }
         .day-pass { background: #15803d !important; border: 1px solid #22c55e; }
         .day-fail { background: #b91c1c !important; border: 1px solid #ef4444; }
-        .day-score { font-size: 0.5rem; opacity: 0.8; margin-top: 2px; }
+        .day-score { font-size: 0.5rem; opacity: 0.7; margin-top: 2px; }
 
-        /* HEADER CIRCLES */
-        .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
-        .stat-label { font-size: 7px; font-weight: 900; color: #555; text-transform: uppercase; margin-top: 4px; text-align: center; line-height: 1; }
-        .stat-val { font-size: 16px; font-weight: 900; }
-        .streak-badge { font-size: 8px; color: #fbbf24; font-weight: 900; margin-top: -2px; }
-
+        /* PICKER */
         .ui-trigger { background: transparent !important; color: var(--neon) !important; border: 1px solid rgba(34, 197, 94, 0.4) !important; border-radius: 8px; padding: 6px 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; min-width: 70px; }
         .modal { position: fixed; inset: 0; background: #050505; z-index: 2000; display: none; flex-direction: column; overflow-y: auto; }
-        .nav-link { flex: 1; text-align: center; font-size: 10px; font-weight: 900; color: #444; letter-spacing: 1px; }
-        .nav-link.active { color: var(--neon); }
-        
         .tag-btn { padding: 12px 6px; border-radius: 12px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .tag-btn span:first-child { font-size: 11px; font-weight: 900; text-transform: uppercase; color: #666; }
         .tag-btn .tally { font-size: 12px; font-weight: 900; color: var(--neon); margin-top: 4px; }
         .tag-btn.active { border-color: var(--neon); background: rgba(34,197,94,0.05); }
         .tag-btn.active span:first-child { color: #fff; }
-
-        textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 15px; width: 100%; height: 120px; outline: none; font-size: 14px; }
+        
+        textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 15px; width: 100%; height: 120px; outline: none; }
         .locked-chk { opacity: 0.3; pointer-events: none; }
+        .nav-link { flex: 1; text-align: center; font-size: 10px; font-weight: 900; color: #444; letter-spacing: 1px; }
+        .nav-link.active { color: var(--neon); }
     </style>
 </head>
 <body class="pb-32">
 
     <div id="v-log">
         <div class="sticky-header text-center">
-            <h1 class="text-[10px] font-black tracking-[0.4em] text-zinc-600 mb-6 uppercase">The Ultimate Tracker</h1>
+            <div id="top-streak" class="streak-top">🔥 0</div>
+            <h1 class="text-[10px] font-black tracking-[0.4em] text-zinc-600 mb-5 uppercase">The Ultimate Tracker</h1>
             
+            <div class="px-6 mb-8"><p id="quote" class="text-xl font-black italic uppercase leading-tight"></p></div>
+
             <div class="flex justify-center items-start gap-4 mb-6">
                 <div class="flex flex-col items-center">
                     <div class="stat-circle"><span id="score-val" class="stat-val text-green-400">0%</span></div>
                     <span class="stat-label">Completed</span>
                 </div>
                 <div class="flex flex-col items-center">
-                    <div class="stat-circle"><span id="days-gone" class="stat-val text-white">0</span></div>
-                    <span class="stat-label">Days<br>Gone By</span>
+                    <div id="conquered-circle" class="stat-circle"><span id="days-conquered" class="stat-val text-white">0</span></div>
+                    <span class="stat-label">Days<br>Conquered</span>
                 </div>
                 <div class="flex flex-col items-center">
-                    <div id="conquered-circle" class="stat-circle"><span id="days-conquered" class="stat-val text-white">0</span><span id="streak-val" class="streak-badge">🔥 0</span></div>
-                    <span class="stat-label">Days<br>Conquered</span>
+                    <div class="stat-circle"><span id="days-gone" class="stat-val text-white">0</span></div>
+                    <span class="stat-label">Days<br>Gone By</span>
                 </div>
             </div>
 
@@ -94,21 +94,13 @@
         <div class="p-6 mt-auto" id="picker-footer"></div>
     </div>
 
-    <div id="detail-modal" class="modal">
-        <div class="p-6 flex justify-between items-center sticky top-0 bg-[#050505] z-10">
-            <button onclick="closeModal('detail-modal')" class="text-2xl text-zinc-500">←</button>
-            <h3 id="dt-name" class="font-black italic uppercase text-green-400 tracking-widest"></h3>
-            <div class="w-8"></div>
-        </div>
-        <div class="p-6 space-y-8" id="detail-content"></div>
-    </div>
-
     <nav class="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/5 flex p-6 pb-10 z-[1000]">
         <div onclick="tab('log')" id="n-log" class="nav-link active">TRACK</div>
         <div onclick="tab('stats')" id="n-stats" class="nav-link">INSIGHTS</div>
     </nav>
 
     <script>
+        const quotes = [{t: "NOTHING CHANGES IF NOTHING CHANGES", c: "#22c55e"}, {t: "DISCIPLINE IS FREEDOM", c: "#3b82f6"}, {t: "WIN THE MORNING WIN THE DAY", c: "#eab308"}, {t: "SHOW UP UNTIL THE JOB IS DONE", c: "#ef4444"}];
         const categories = ["Morning Rituals", "Physical", "Mental", "Nutrition", "Vices"];
         const genArr = (s, e, t) => Array.from({length: Math.floor((e - s) / t) + 1}, (_, i) => s + (i * t));
         const stepArr = [...genArr(8000, 15000, 250), ...genArr(15500, 20000, 500)];
@@ -137,7 +129,7 @@
             { id: 'sug', label: 'No Sugar', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('ultimate_v21')) || {};
+        let db = JSON.parse(localStorage.getItem('ultimate_v22')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
         let statPeriod = 'all';
@@ -145,27 +137,33 @@
         function fmtDate(ds) { return new Date(ds).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
 
         function renderLog() {
+            const q = quotes[new Date().getDate() % quotes.length];
+            document.getElementById('quote').innerText = q.t;
+            document.getElementById('quote').style.color = q.c;
             document.getElementById('log-date-display').innerText = fmtDate(activeDate);
             const list = document.getElementById('log-list'); list.innerHTML = '';
+            
             categories.forEach(c => {
                 let html = `<div class="glass p-6"><h3 class="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
                 fullSchema.filter(s => s.cat === c).sort((a,b) => a.label.localeCompare(b.label)).forEach(s => {
                     const d = db[activeDate] || {};
                     const val = d[s.id+'_v'] || '';
-                    // LOGIC: Numerical picks locked to value selection
                     const isNum = (s.type === 'pick' || s.type === 'read');
-                    if(isNum && val && !d[s.id+'_c']) d[s.id+'_c'] = true; 
-                    if(isNum && !val) d[s.id+'_c'] = false;
+                    
+                    // Specific Logic: Creatine 0 allows check, others require > 0
+                    if (isNum) {
+                        if (s.id === 'creat' && val !== '') d[s.id+'_c'] = true;
+                        else if (val && val !== '0') d[s.id+'_c'] = true;
+                        else d[s.id+'_c'] = false;
+                    }
                     
                     const chk = d[s.id+'_c'] || false;
-                    
                     html += `<div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4" onclick="openHabitDetail('${s.id}')">
-                            <div onclick="event.stopPropagation(); ${isNum ? '' : `toggleCh('${s.id}')`}" 
-                                 class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${isNum?'locked-chk':''}"></div>
+                        <div class="flex items-center gap-4">
+                            <div onclick="${isNum ? '' : `toggleCh('${s.id}')`}" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${isNum?'locked-chk':''}"></div>
                             <span class="text-sm font-bold ${chk?'text-white':'text-zinc-500'}">${s.label}</span>
                         </div>`;
-                    if(s.type !== 'chk') html += `<button onclick="openPicker('${s.id}')" class="ui-trigger">${val ? 'VIEW' : 'SET'}</button>`;
+                    if(s.type !== 'chk') html += `<button onclick="openPicker('${s.id}')" class="ui-trigger">${val !== '' ? 'VIEW' : 'SET'}</button>`;
                     html += `</div>`;
                 });
                 list.innerHTML += html + `</div></div>`;
@@ -178,30 +176,20 @@
         function updateHeader() {
             const dates = Object.keys(db).sort();
             if(!dates.length) return;
-            
             const firstDate = new Date(dates[0]);
-            const today = new Date();
-            const gone = Math.floor((today - firstDate) / 86400000) + 1;
+            const gone = Math.floor((new Date() - firstDate) / 86400000) + 1;
             document.getElementById('days-gone').innerText = gone;
 
-            let conquered = 0;
-            let streak = 0;
-            let currentStreakActive = true;
-            
-            // Calculate Conquered and Streak
-            const sortedDates = dates.slice().reverse();
+            let conquered = 0, streak = 0, currentStreakActive = true;
             dates.forEach(d => { if(db[d].daily_score >= 80) conquered++; });
             
-            // Current Streak
             for(let i=0; i<gone; i++) {
-                let checkDate = new Date(); checkDate.setDate(checkDate.getDate() - i);
-                let ds = checkDate.toISOString().split('T')[0];
-                if(db[ds] && db[ds].daily_score >= 80) { if(currentStreakActive) streak++; } 
-                else { currentStreakActive = false; }
+                let dCheck = new Date(); dCheck.setDate(dCheck.getDate() - i);
+                let ds = dCheck.toISOString().split('T')[0];
+                if(db[ds] && db[ds].daily_score >= 80) { if(currentStreakActive) streak++; } else { currentStreakActive = false; }
             }
-
             document.getElementById('days-conquered').innerText = conquered;
-            document.getElementById('streak-val').innerText = `🔥 ${streak}`;
+            document.getElementById('top-streak').innerText = `🔥 ${streak}`;
             
             const circ = document.getElementById('conquered-circle');
             circ.style.borderColor = conquered >= gone ? '#22c55e' : '#ef4444';
@@ -232,7 +220,7 @@
                     });
                     html += `</div><p class="text-[10px] font-black text-zinc-500 uppercase mb-2">Book Title</p>`;
                 }
-                html += `<textarea id="txt-input" placeholder="Type here...">${db[activeDate][id+'_note'] || db[activeDate][id+'_v'] || ''}</textarea>`;
+                html += `<textarea id="txt-input" placeholder="Notes...">${db[activeDate][id+'_note'] || db[activeDate][id+'_v'] || ''}</textarea>`;
                 area.innerHTML = html;
                 footer.innerHTML = `<button onclick="handleText('${id}', ${s.type==='read'})" class="w-full py-5 glass text-green-400 font-black uppercase">SAVE</button>`;
             } else {
@@ -245,7 +233,7 @@
                         ${counts ? `<span class="tally">${counts[opt]}X</span>` : ''}
                     </div>`;
                 });
-                if(s.type === 'multi') footer.innerHTML = `<button onclick="closeModal('picker-modal')" class="w-full py-5 glass text-green-400 font-black uppercase">CONFIRM</button>`;
+                if(s.type === 'multi') footer.innerHTML = `<button onclick="closeModal('picker-modal')" class="w-full py-5 glass text-green-400 font-black uppercase tracking-widest">CONFIRM</button>`;
             }
             document.getElementById('picker-modal').style.display = 'flex';
         }
@@ -284,7 +272,7 @@
         function openCalendar() {
             const area = document.getElementById('picker-options'); area.innerHTML = '';
             area.classList.add('grid-cols-2');
-            document.getElementById('picker-title').innerText = "Timeline";
+            document.getElementById('picker-title').innerText = "Calendar";
             const y = calView.getFullYear(), m = calView.getMonth();
             let html = `<div class="col-span-2 mb-4 flex justify-between px-4"><button onclick="changeCal(-1)">◄</button><span class="font-black text-xs">${new Intl.DateTimeFormat('en-US',{month:'short',year:'numeric'}).format(calView)}</span><button onclick="changeCal(1)">►</button></div>`;
             html += `<div class="col-span-2 cal-flex mb-2">${['S','M','T','W','T','F','S'].map(d=>`<div class="cal-day text-zinc-700">${d}</div>`).join('')}</div><div class="col-span-2 cal-flex">`;
@@ -304,25 +292,35 @@
 
         function runStats() {
             const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
-            const dates = Object.keys(db);
-            const totalDays = statPeriod === 'all' ? (Math.floor((new Date() - new Date(dates.sort()[0])) / 86400000) + 1) : parseInt(statPeriod);
-            
-            const order = ['steps', 'prot', 'water', 'm_push', 'm_squat', 'book', 'work'];
-            const sortedSchema = [...fullSchema].sort((a,b) => {
-                let idxA = order.indexOf(a.id), idxB = order.indexOf(b.id);
-                return (idxA > -1 ? idxA : 99) - (idxB > -1 ? idxB : 99);
-            });
+            const dates = Object.keys(db).sort();
+            const start = statPeriod === 'all' ? new Date(dates[0]) : new Date(new Date().setDate(new Date().getDate() - parseInt(statPeriod)));
+            const daysInRange = Math.max(1, Math.floor((new Date() - start) / 86400000) + 1);
 
-            sortedSchema.forEach(s => {
-                let sum = 0, count = 0;
-                dates.forEach(d => {
-                    const diff = (new Date() - new Date(d)) / 86400000;
-                    if(statPeriod === 'all' || diff <= totalDays) {
-                        if(s.type === 'chk' && db[d][s.id+'_c']) count++;
-                        else if(db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) { sum += parseFloat(db[d][s.id+'_v']); count++; }
+            const order = ['steps', 'prot', 'water', 'm_push', 'm_squat', 'hang', 'book', 'work', 'fin'];
+            const sorted = [...fullSchema].sort((a,b) => (order.indexOf(a.id) > -1 ? order.indexOf(a.id) : 99) - (order.indexOf(b.id) > -1 ? order.indexOf(b.id) : 99));
+
+            sorted.forEach(s => {
+                let sum = 0, count = 0, workDays = 0;
+                Object.keys(db).forEach(d => {
+                    if (new Date(d) >= start) {
+                        if (s.id === 'work') {
+                            const val = db[d][s.id+'_v'] || '';
+                            if (val && !val.includes('Rest')) workDays++;
+                        } else if (s.id === 'fin' || s.type === 'chk') {
+                            if (db[d][s.id+'_c'] || db[d][s.id+'_v']) count++;
+                        } else if (db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) {
+                            sum += parseFloat(db[d][s.id+'_v']);
+                            count++;
+                        }
                     }
                 });
-                let val = s.type === 'chk' ? Math.round((count/totalDays)*100)+'%' : (sum/totalDays).toFixed(1) + (s.unit || '');
+
+                let val;
+                if (s.id === 'work') val = Math.round((workDays/daysInRange)*100)+'%';
+                else if (s.id === 'fin' || s.type === 'chk') val = Math.round((count/daysInRange)*100)+'%';
+                else if (s.id === 'water') val = (sum/daysInRange).toFixed(1) + 'L';
+                else val = Math.round(sum/daysInRange) + (s.unit || '');
+
                 grid.innerHTML += `<div class="glass p-6 flex justify-between items-center"><span class="text-xs font-black text-white uppercase">${s.label}</span><span class="text-2xl font-black text-green-400 italic">${val}</span></div>`;
             });
         }
@@ -338,7 +336,7 @@
             document.getElementById('n-'+t).classList.add('active');
             if(t==='stats') runStats();
         }
-        function save() { localStorage.setItem('ultimate_v21', JSON.stringify(db)); alert("SOVEREIGNTY ACHIEVED."); }
+        function save() { localStorage.setItem('ultimate_v22', JSON.stringify(db)); alert("SYCHRONIZED."); }
         renderLog();
     </script>
 </body>
