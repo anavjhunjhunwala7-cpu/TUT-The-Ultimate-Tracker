@@ -9,14 +9,14 @@
         :root { --neon: #22c55e; --bg: #050505; --glass: rgba(22, 22, 25, 0.9); --red: #ef4444; }
         body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
         
-        .sticky-header { position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #050505 90%, transparent); backdrop-filter: blur(15px); padding: 15px 0 25px; }
+        .sticky-header { position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #050505 90%, transparent); backdrop-filter: blur(15px); padding: 15px 0 20px; }
         .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; }
 
-        /* HEADER STATS */
+        /* HEADER */
         .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
         .stat-label { font-size: 7px; font-weight: 900; color: #555; text-transform: uppercase; margin-top: 4px; text-align: center; line-height: 1.1; }
         .stat-val { font-size: 16px; font-weight: 900; }
-        .streak-top { position: absolute; left: 20px; top: 18px; font-size: 12px; font-weight: 900; color: #fbbf24; letter-spacing: 1px; }
+        .streak-top { position: absolute; left: 20px; top: 18px; font-size: 12px; font-weight: 900; color: #fbbf24; letter-spacing: 1px; z-index: 110; }
 
         /* CALENDAR */
         .cal-flex { display: flex; flex-wrap: wrap; width: 100%; }
@@ -30,7 +30,7 @@
         .modal { position: fixed; inset: 0; background: #050505; z-index: 2000; display: none; flex-direction: column; overflow-y: auto; }
         .tag-btn { padding: 12px 6px; border-radius: 12px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .tag-btn span:first-child { font-size: 11px; font-weight: 900; text-transform: uppercase; color: #666; }
-        .tag-btn .tally { font-size: 12px; font-weight: 900; color: var(--neon); margin-top: 4px; }
+        .tag-btn .tally { font-size: 14px; font-weight: 900; color: var(--neon); margin-top: 4px; }
         .tag-btn.active { border-color: var(--neon); background: rgba(34,197,94,0.05); }
         .tag-btn.active span:first-child { color: #fff; }
         
@@ -38,6 +38,8 @@
         .locked-chk { opacity: 0.3; pointer-events: none; }
         .nav-link { flex: 1; text-align: center; font-size: 10px; font-weight: 900; color: #444; letter-spacing: 1px; }
         .nav-link.active { color: var(--neon); }
+
+        .reset-btn { color: var(--red); font-size: 18px; font-weight: 900; padding: 10px; }
     </style>
 </head>
 <body class="pb-32">
@@ -46,7 +48,6 @@
         <div class="sticky-header text-center">
             <div id="top-streak" class="streak-top">🔥 0</div>
             <h1 class="text-[10px] font-black tracking-[0.4em] text-zinc-600 mb-5 uppercase">The Ultimate Tracker</h1>
-            
             <div class="px-6 mb-8"><p id="quote" class="text-xl font-black italic uppercase leading-tight"></p></div>
 
             <div class="flex justify-center items-start gap-4 mb-6">
@@ -86,7 +87,7 @@
         <div class="p-6 flex justify-between items-center sticky top-0 bg-[#050505] z-10 border-b border-white/5">
             <button onclick="closeModal('picker-modal')" class="text-2xl text-zinc-500">←</button>
             <h3 id="picker-title" class="font-black italic uppercase text-green-400 tracking-widest text-xs"></h3>
-            <div class="w-8"></div>
+            <button id="reset-trigger" class="reset-btn">✕</button>
         </div>
         <div class="p-6 space-y-4" id="picker-content">
             <div class="grid grid-cols-2 gap-3" id="picker-options"></div>
@@ -129,7 +130,7 @@
             { id: 'sug', label: 'No Sugar', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('ultimate_v22')) || {};
+        let db = JSON.parse(localStorage.getItem('ultimate_v23')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
         let statPeriod = 'all';
@@ -148,10 +149,9 @@
                 fullSchema.filter(s => s.cat === c).sort((a,b) => a.label.localeCompare(b.label)).forEach(s => {
                     const d = db[activeDate] || {};
                     const val = d[s.id+'_v'] || '';
-                    const isNum = (s.type === 'pick' || s.type === 'read');
+                    const isSelect = (s.type === 'pick' || s.type === 'read' || s.type === 'multi');
                     
-                    // Specific Logic: Creatine 0 allows check, others require > 0
-                    if (isNum) {
+                    if (isSelect) {
                         if (s.id === 'creat' && val !== '') d[s.id+'_c'] = true;
                         else if (val && val !== '0') d[s.id+'_c'] = true;
                         else d[s.id+'_c'] = false;
@@ -160,7 +160,7 @@
                     const chk = d[s.id+'_c'] || false;
                     html += `<div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <div onclick="${isNum ? '' : `toggleCh('${s.id}')`}" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${isNum?'locked-chk':''}"></div>
+                            <div onclick="${isSelect ? '' : `toggleCh('${s.id}')`}" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${isSelect?'locked-chk':''}"></div>
                             <span class="text-sm font-bold ${chk?'text-white':'text-zinc-500'}">${s.label}</span>
                         </div>`;
                     if(s.type !== 'chk') html += `<button onclick="openPicker('${s.id}')" class="ui-trigger">${val !== '' ? 'VIEW' : 'SET'}</button>`;
@@ -180,14 +180,21 @@
             const gone = Math.floor((new Date() - firstDate) / 86400000) + 1;
             document.getElementById('days-gone').innerText = gone;
 
-            let conquered = 0, streak = 0, currentStreakActive = true;
-            dates.forEach(d => { if(db[d].daily_score >= 80) conquered++; });
-            
-            for(let i=0; i<gone; i++) {
-                let dCheck = new Date(); dCheck.setDate(dCheck.getDate() - i);
-                let ds = dCheck.toISOString().split('T')[0];
-                if(db[ds] && db[ds].daily_score >= 80) { if(currentStreakActive) streak++; } else { currentStreakActive = false; }
+            // Immediate Streak Engine Recalibration
+            let streak = 0;
+            let currentStreakActive = true;
+            let checkDate = new Date(activeDate); // Start from currently viewed date
+
+            for(let i=0; i<365; i++) {
+                let ds = checkDate.toISOString().split('T')[0];
+                if(db[ds] && db[ds].daily_score >= 80) { if(currentStreakActive) streak++; } 
+                else { if(i > 0 || (db[ds] && db[ds].daily_score < 80)) currentStreakActive = false; }
+                checkDate.setDate(checkDate.getDate() - 1);
             }
+
+            let conquered = 0;
+            dates.forEach(d => { if(db[d].daily_score >= 80) conquered++; });
+
             document.getElementById('days-conquered').innerText = conquered;
             document.getElementById('top-streak').innerText = `🔥 ${streak}`;
             
@@ -207,6 +214,7 @@
             const area = document.getElementById('picker-options'); area.innerHTML = '';
             const footer = document.getElementById('picker-footer'); footer.innerHTML = '';
             document.getElementById('picker-title').innerText = s.label;
+            document.getElementById('reset-trigger').onclick = () => resetHabit(id);
             const curVal = (db[activeDate] && db[activeDate][id+'_v']) ? db[activeDate][id+'_v'].toString().split(',') : [];
 
             if(s.type === 'text' || s.type === 'read') {
@@ -236,6 +244,16 @@
                 if(s.type === 'multi') footer.innerHTML = `<button onclick="closeModal('picker-modal')" class="w-full py-5 glass text-green-400 font-black uppercase tracking-widest">CONFIRM</button>`;
             }
             document.getElementById('picker-modal').style.display = 'flex';
+        }
+
+        function resetHabit(id) {
+            if(db[activeDate]) {
+                delete db[activeDate][id+'_v'];
+                delete db[activeDate][id+'_c'];
+                delete db[activeDate][id+'_note'];
+            }
+            closeModal('picker-modal');
+            renderLog();
         }
 
         function handlePick(id, val, multi) {
@@ -306,6 +324,7 @@
                         if (s.id === 'work') {
                             const val = db[d][s.id+'_v'] || '';
                             if (val && !val.includes('Rest')) workDays++;
+                            else if (val.includes('Rest') && val.split(',').length > 1) workDays++; // If Rest + something else
                         } else if (s.id === 'fin' || s.type === 'chk') {
                             if (db[d][s.id+'_c'] || db[d][s.id+'_v']) count++;
                         } else if (db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) {
@@ -336,7 +355,7 @@
             document.getElementById('n-'+t).classList.add('active');
             if(t==='stats') runStats();
         }
-        function save() { localStorage.setItem('ultimate_v22', JSON.stringify(db)); alert("SYCHRONIZED."); }
+        function save() { localStorage.setItem('ultimate_v23', JSON.stringify(db)); alert("SYCHRONIZED."); }
         renderLog();
     </script>
 </body>
