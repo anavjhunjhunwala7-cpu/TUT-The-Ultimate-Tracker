@@ -53,12 +53,8 @@
                 <button onclick="shiftDay(1)" class="text-zinc-700 text-2xl font-black p-2">►</button>
             </div>
         </div>
-        
         <div id="log-list" class="p-4 space-y-6"></div>
-        
-        <div class="p-4">
-            <button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400 text-lg tracking-widest">Let's Fucking Go</button>
-        </div>
+        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400 text-lg tracking-widest">Let's Fucking Go</button></div>
     </div>
 
     <div id="v-stats" class="hidden p-4 space-y-6">
@@ -75,9 +71,7 @@
             <h3 id="picker-title" class="font-black italic uppercase text-green-400 tracking-widest text-xs"></h3>
             <button id="reset-trigger" class="text-red-500 text-lg font-black p-2">✕</button>
         </div>
-        <div class="p-6 space-y-4" id="picker-content">
-            <div class="grid grid-cols-2 gap-3" id="picker-options"></div>
-        </div>
+        <div class="p-6 space-y-4" id="picker-content"><div class="grid grid-cols-2 gap-3" id="picker-options"></div></div>
         <div class="p-6 mt-auto" id="picker-footer"></div>
     </div>
 
@@ -90,8 +84,7 @@
         const quotes = [{t: "NOTHING CHANGES IF NOTHING CHANGES"}, {t: "DISCIPLINE IS FREEDOM"}, {t: "WIN THE MORNING WIN THE DAY"}];
         const categories = ["Morning Rituals", "Physical", "Mental", "Nutrition", "Vices"];
         const genArr = (s, e, t) => Array.from({length: Math.floor((e - s) / t) + 1}, (_, i) => s + (i * t));
-        const stepArr = [...genArr(8000, 15000, 250), ...genArr(15500, 20000, 500)];
-
+        
         const fullSchema = [
             { id: 'weight', label: 'Weight', type: 'text', cat: 'Morning Rituals', unit: 'kg' },
             { id: 'm_push', label: 'Pushups', type: 'pick', options: genArr(0, 75, 5), unit: '', cat: 'Morning Rituals' },
@@ -105,7 +98,7 @@
             { id: 'news', label: 'Newspaper', type: 'chk', cat: 'Mental' },
             { id: 'book', label: 'Read', type: 'read', options: [5,10,15,20,25,30,40,50,60,80,100], unit: 'p', cat: 'Mental' },
             { id: 'hang', label: 'Dead Hang', type: 'pick', options: genArr(0, 120, 10), unit: 's', cat: 'Physical' },
-            { id: 'steps', label: 'Steps', type: 'pick', options: stepArr, unit: '', cat: 'Physical' },
+            { id: 'steps', label: 'Steps', type: 'pick', options: [...genArr(8000, 15000, 250), ...genArr(15500, 20000, 500)], unit: '', cat: 'Physical' },
             { id: 'work', label: 'Workout', type: 'multi', options: ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Walk", "Run", "Mobility", "Sports", "Rest"], cat: 'Physical' },
             { id: 'creat', label: 'Creatine', type: 'pick', options: [0,1,2,3,4,5,6,7,8,9,10], unit: 'g', cat: 'Nutrition' },
             { id: 'prot', label: 'Protein', type: 'pick', options: genArr(90, 200, 5), unit: 'g', cat: 'Nutrition' },
@@ -179,7 +172,6 @@
             const s = fullSchema.find(x => x.id === id);
             const area = document.getElementById('picker-options'); area.innerHTML = '';
             document.getElementById('picker-title').innerText = s.label;
-            document.getElementById('reset-trigger').style.display = 'block';
             document.getElementById('reset-trigger').onclick = () => resetHabit(id);
             const curVal = (db[activeDate] && db[activeDate][id+'_v'] !== undefined) ? db[activeDate][id+'_v'].toString().split(',') : [];
             if(s.type === 'text' || s.type === 'read') {
@@ -217,14 +209,22 @@
             const dates = Object.keys(db).sort(); if(!dates.length) return;
             const start = statPeriod === 'all' ? new Date(dates[0]) : new Date(new Date().setDate(new Date().getDate() - parseInt(statPeriod)));
             const daysInRange = Math.max(1, Math.floor((new Date() - start) / 86400000) + 1);
+
             insightOrder.forEach(id => {
                 const s = fullSchema.find(x => x.id === id);
                 let sum = 0, count = 0, wSum = 0, wDays = 0;
                 Object.keys(db).forEach(d => {
                     if (new Date(d) >= start) {
                         if (db[d][s.id+'_c']) count++;
-                        if (s.id === 'weight' && db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) { wSum += parseFloat(db[d][s.id+'_v']); wDays++; }
-                        else if (db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) sum += parseFloat(db[d][s.id+'_v']);
+                        let raw = db[d][s.id+'_v'];
+                        if (raw) {
+                            let match = raw.toString().match(/\d+(\.\d+)?/);
+                            let num = match ? parseFloat(match[0]) : NaN;
+                            if (!isNaN(num)) {
+                                if (s.id === 'weight') { wSum += num; wDays++; }
+                                else { sum += num; }
+                            }
+                        }
                     }
                 });
                 let val = (s.id === 'weight') ? (wDays > 0 ? (wSum/wDays).toFixed(1) + 'kg' : '0kg') : 
@@ -238,7 +238,7 @@
 
         function promote(id) { insightOrder = [id, ...insightOrder.filter(x => x !== id)]; localStorage.setItem('INSIGHT_ORDER', JSON.stringify(insightOrder)); runStats(); }
         function toggleSortMode() { sortMode = !sortMode; document.getElementById('sort-trigger').innerText = sortMode ? 'Finish' : 'Arrange'; runStats(); }
-        function openCalendar() { document.getElementById('reset-trigger').style.display = 'none'; document.getElementById('picker-title').innerText = "CALENDAR"; openCalendarContent(); }
+        function openCalendar() { document.getElementById('picker-title').innerText = "CALENDAR"; openCalendarContent(); }
         function openCalendarContent() {
             const area = document.getElementById('picker-options'); area.innerHTML = ''; area.classList.add('grid-cols-2');
             const y = calView.getFullYear(), m = calView.getMonth();
@@ -251,7 +251,7 @@
             }
             area.innerHTML = html + '</div>'; document.getElementById('picker-modal').style.display = 'flex';
         }
-        function openHabitCalendar(id) { document.getElementById('reset-trigger').style.display = 'none'; document.getElementById('picker-title').innerText = fullSchema.find(s=>s.id===id).label; openHabitContent(id); }
+        function openHabitCalendar(id) { document.getElementById('picker-title').innerText = fullSchema.find(s=>s.id===id).label; openHabitContent(id); }
         function openHabitContent(id) {
             const area = document.getElementById('picker-options'); area.innerHTML = '';
             const y = calView.getFullYear(), m = calView.getMonth();
