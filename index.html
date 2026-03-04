@@ -12,37 +12,41 @@
         .sticky-header { position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #050505 90%, transparent); backdrop-filter: blur(15px); padding: 15px 0 20px; }
         .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; }
 
-        /* HEADER */
+        /* HEADER & STATS */
         .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
         .stat-label { font-size: 7px; font-weight: 900; color: #555; text-transform: uppercase; margin-top: 4px; text-align: center; line-height: 1.1; }
         .stat-val { font-size: 16px; font-weight: 900; }
         .streak-top { position: absolute; left: 20px; top: 18px; font-size: 12px; font-weight: 900; color: #fbbf24; letter-spacing: 1px; z-index: 110; }
 
-        /* CALENDAR */
+        /* CALENDAR UI */
         .cal-flex { display: flex; flex-wrap: wrap; width: 100%; }
         .cal-day { width: 14.28%; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; border-radius: 8px; position: relative; }
         .day-pass { background: #15803d !important; border: 1px solid #22c55e; }
         .day-fail { background: #b91c1c !important; border: 1px solid #ef4444; }
         .day-score { font-size: 0.5rem; opacity: 0.7; margin-top: 2px; }
 
-        /* PICKER */
-        .ui-trigger { background: transparent !important; color: var(--neon) !important; border: 1px solid rgba(34, 197, 94, 0.4) !important; border-radius: 8px; padding: 6px 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; min-width: 70px; }
+        /* PICKER & UI COMPONENTS */
+        .ui-trigger { background: transparent !important; color: var(--neon) !important; border: 1px solid rgba(34, 197, 94, 0.4) !important; border-radius: 8px; padding: 6px 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; min-width: 70px; text-align: center; }
         .modal { position: fixed; inset: 0; background: #050505; z-index: 2000; display: none; flex-direction: column; overflow-y: auto; }
         .tag-btn { padding: 12px 6px; border-radius: 12px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .tag-btn span:first-child { font-size: 11px; font-weight: 900; text-transform: uppercase; color: #666; }
-        .tag-btn .tally { font-size: 14px; font-weight: 900; color: var(--neon); margin-top: 4px; }
         .tag-btn.active { border-color: var(--neon); background: rgba(34,197,94,0.05); }
         .tag-btn.active span:first-child { color: #fff; }
         
-        textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 15px; width: 100%; height: 120px; outline: none; }
+        textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 15px; width: 100%; height: 120px; outline: none; font-weight: 700; }
         .locked-chk { opacity: 0.3; pointer-events: none; }
         .nav-link { flex: 1; text-align: center; font-size: 10px; font-weight: 900; color: #444; letter-spacing: 1px; }
         .nav-link.active { color: var(--neon); }
-
         .reset-btn { color: var(--red); font-size: 18px; font-weight: 900; padding: 10px; }
+
+        /* CUSTOM TOAST */
+        #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 300px; background: #000; border: 2px solid var(--neon); padding: 20px; border-radius: 15px; text-align: center; z-index: 5000; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #toast span { color: var(--neon); font-weight: 900; font-style: italic; letter-spacing: 2px; text-transform: uppercase; }
     </style>
 </head>
 <body class="pb-32">
+
+    <div id="toast"><span>Locked In</span></div>
 
     <div id="v-log">
         <div class="sticky-header text-center">
@@ -107,10 +111,10 @@
         const stepArr = [...genArr(8000, 15000, 250), ...genArr(15500, 20000, 500)];
 
         const fullSchema = [
+            { id: 'weight', label: 'Weight', type: 'text', cat: 'Morning Rituals' },
             { id: 'm_push', label: 'Pushups', type: 'pick', options: genArr(0, 75, 5), unit: '', cat: 'Morning Rituals' },
             { id: 'm_squat', label: 'Squats', type: 'pick', options: genArr(0, 75, 5), unit: '', cat: 'Morning Rituals' },
             { id: 'floss', label: 'Flossing', type: 'chk', cat: 'Morning Rituals' },
-            { id: 'mouth', label: 'Mouth Taping', type: 'chk', cat: 'Morning Rituals' },
             { id: 'neeti', label: 'Jal Neeti', type: 'chk', cat: 'Morning Rituals' },
             { id: 'fin', label: 'Finshots', type: 'text', cat: 'Mental' },
             { id: 'hanuman', label: 'Hanuman Chalisa', type: 'chk', cat: 'Mental' },
@@ -130,7 +134,7 @@
             { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('THE_ULTIMATE_TRACKER_FINAL')) || {};
+        let db = JSON.parse(localStorage.getItem('ULTIMATE_TRACKER_V27')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
         let statPeriod = 'all';
@@ -149,19 +153,17 @@
                 fullSchema.filter(s => s.cat === c).forEach(s => {
                     const d = db[activeDate] || {};
                     const val = d[s.id+'_v'] || '';
-                    const isSelect = (s.type === 'pick' || s.type === 'read' || s.type === 'multi');
+                    const isSelect = (s.type === 'pick' || s.type === 'read' || s.type === 'multi' || s.type === 'text');
                     
                     if (isSelect) {
-                        if (s.id === 'creat' && val !== '') d[s.id+'_c'] = true;
-                        else if (val && val !== '0') d[s.id+'_c'] = true;
-                        else d[s.id+'_c'] = false;
+                        d[s.id+'_c'] = (val && val !== '' && val !== '0');
                     }
                     
                     const chk = d[s.id+'_c'] || false;
                     html += `<div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <div onclick="${isSelect ? '' : `toggleCh('${s.id}')`}" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${isSelect?'locked-chk':''}"></div>
-                            <span class="text-sm font-bold ${chk?'text-white':'text-zinc-500'}">${s.label}</span>
+                            <div onclick="${(s.type === 'chk') ? `toggleCh('${s.id}')` : ''}" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${(s.type !== 'chk')?'locked-chk':''}"></div>
+                            <span onclick="openHabitCalendar('${s.id}')" class="text-sm font-bold ${chk?'text-white':'text-zinc-500'} cursor-pointer">${s.label} ${s.type==='text' && val ? `<span class="text-zinc-600 ml-2">[${val}]</span>` : ''}</span>
                         </div>`;
                     if(s.type !== 'chk') html += `<button onclick="openPicker('${s.id}')" class="ui-trigger">${val !== '' ? 'VIEW' : 'SET'}</button>`;
                     html += `</div>`;
@@ -177,35 +179,23 @@
             const dates = Object.keys(db).sort();
             if(!dates.length) return;
 
-            // 1. Days Gone By (Corrected for First Log Date)
             const firstDate = new Date(dates[0]);
             const gone = Math.floor((new Date() - firstDate) / 86400000) + 1;
             document.getElementById('days-gone').innerText = gone;
 
-            // 2. THE STREAK ENGINE (V26 Final Fix)
             let streak = 0;
             const todayStr = new Date().toISOString().split('T')[0];
-            let checkDate = new Date(); // True today
+            let checkDate = new Date();
             
-            // Check if Today is finished. If NOT, start checking from YESTERDAY
-            let todayScore = (db[todayStr] && db[todayStr].daily_score) || 0;
-            if (todayScore < 80) {
-                checkDate.setDate(checkDate.getDate() - 1);
-            }
+            if (((db[todayStr] && db[todayStr].daily_score) || 0) < 80) checkDate.setDate(checkDate.getDate() - 1);
 
             for(let i=0; i<365; i++) {
                 let ds = checkDate.toISOString().split('T')[0];
-                if(db[ds] && db[ds].daily_score >= 80) {
-                    streak++;
-                } else {
-                    // Only break if we've actually passed the date or it was a recorded fail
-                    if (dates.includes(ds)) break; 
-                    else break;
-                }
+                if(db[ds] && db[ds].daily_score >= 80) streak++;
+                else { if(dates.includes(ds)) break; break; }
                 checkDate.setDate(checkDate.getDate() - 1);
             }
 
-            // 3. Conquered Count
             let conquered = 0;
             dates.forEach(d => { if(db[d].daily_score >= 80) conquered++; });
 
@@ -229,6 +219,7 @@
             const area = document.getElementById('picker-options'); area.innerHTML = '';
             const footer = document.getElementById('picker-footer'); footer.innerHTML = '';
             document.getElementById('picker-title').innerText = s.label;
+            document.getElementById('reset-trigger').style.display = 'block';
             document.getElementById('reset-trigger').onclick = () => resetHabit(id);
             const curVal = (db[activeDate] && db[activeDate][id+'_v']) ? db[activeDate][id+'_v'].toString().split(',') : [];
 
@@ -241,34 +232,31 @@
                         const active = curVal.includes(opt.toString());
                         html += `<div onclick="handlePick('${id}', '${opt}', false)" class="tag-btn ${active?'active':''}"><span class="text-[10px]">${opt}</span></div>`;
                     });
-                    html += `</div><p class="text-[10px] font-black text-zinc-500 uppercase mb-2">Book Title</p>`;
+                    html += `</div>`;
                 }
-                html += `<textarea id="txt-input" placeholder="Notes...">${db[activeDate][id+'_note'] || db[activeDate][id+'_v'] || ''}</textarea>`;
+                html += `<textarea id="txt-input" placeholder="${s.id==='weight'?'Enter weight...':'Notes...'}">${db[activeDate][id+'_v'] || ''}</textarea>`;
                 area.innerHTML = html;
-                footer.innerHTML = `<button onclick="handleText('${id}', ${s.type==='read'})" class="w-full py-5 glass text-green-400 font-black uppercase">SAVE</button>`;
+                footer.innerHTML = `<button onclick="handleText('${id}')" class="w-full py-5 glass text-green-400 font-black uppercase">SAVE</button>`;
             } else {
                 area.classList.add('grid-cols-2');
-                const counts = (id==='work') ? getWorkoutCounts() : null;
                 s.options.forEach(opt => {
                     const active = curVal.includes(opt.toString());
-                    area.innerHTML += `<div onclick="handlePick('${id}', '${opt}', ${s.type==='multi'})" class="tag-btn ${active?'active':''}">
-                        <span>${opt}${s.unit||''}</span>
-                        ${counts ? `<span class="tally">${counts[opt]}X</span>` : ''}
-                    </div>`;
+                    area.innerHTML += `<div onclick="handlePick('${id}', '${opt}', ${s.type==='multi'})" class="tag-btn ${active?'active':''}"><span>${opt}${s.unit||''}</span></div>`;
                 });
                 if(s.type === 'multi') footer.innerHTML = `<button onclick="closeModal('picker-modal')" class="w-full py-5 glass text-green-400 font-black uppercase tracking-widest">CONFIRM</button>`;
             }
             document.getElementById('picker-modal').style.display = 'flex';
         }
 
+        function handleText(id) {
+            if(!db[activeDate]) db[activeDate] = {};
+            db[activeDate][id+'_v'] = document.getElementById('txt-input').value;
+            closeModal('picker-modal'); renderLog();
+        }
+
         function resetHabit(id) {
-            if(db[activeDate]) {
-                delete db[activeDate][id+'_v'];
-                delete db[activeDate][id+'_c'];
-                delete db[activeDate][id+'_note'];
-            }
-            closeModal('picker-modal');
-            renderLog();
+            if(db[activeDate]) { delete db[activeDate][id+'_v']; delete db[activeDate][id+'_c']; }
+            closeModal('picker-modal'); renderLog();
         }
 
         function handlePick(id, val, multi) {
@@ -285,27 +273,11 @@
             renderLog();
         }
 
-        function handleText(id, isRead) {
-            if(!db[activeDate]) db[activeDate] = {};
-            const txt = document.getElementById('txt-input').value;
-            if(isRead) db[activeDate][id+'_note'] = txt;
-            else db[activeDate][id+'_v'] = txt;
-            closeModal('picker-modal'); renderLog();
-        }
-
-        function getWorkoutCounts() {
-            const counts = {};
-            fullSchema.find(s=>s.id==='work').options.forEach(o => counts[o] = 0);
-            Object.values(db).forEach(day => {
-                if(day.work_v) day.work_v.split(',').forEach(v => { if(counts[v]!==undefined) counts[v]++; });
-            });
-            return counts;
-        }
-
         function openCalendar() {
+            document.getElementById('reset-trigger').style.display = 'none';
             const area = document.getElementById('picker-options'); area.innerHTML = '';
             area.classList.add('grid-cols-2');
-            document.getElementById('picker-title').innerText = "Calendar";
+            document.getElementById('picker-title').innerText = "CALENDAR";
             const y = calView.getFullYear(), m = calView.getMonth();
             let html = `<div class="col-span-2 mb-4 flex justify-between px-4"><button onclick="changeCal(-1)">◄</button><span class="font-black text-xs">${new Intl.DateTimeFormat('en-US',{month:'short',year:'numeric'}).format(calView)}</span><button onclick="changeCal(1)">►</button></div>`;
             html += `<div class="col-span-2 cal-flex mb-2">${['S','M','T','W','T','F','S'].map(d=>`<div class="cal-day text-zinc-700">${d}</div>`).join('')}</div><div class="col-span-2 cal-flex">`;
@@ -323,6 +295,26 @@
             document.getElementById('picker-modal').style.display = 'flex';
         }
 
+        function openHabitCalendar(id) {
+            document.getElementById('reset-trigger').style.display = 'none';
+            const s = fullSchema.find(x => x.id === id);
+            const area = document.getElementById('picker-options'); area.innerHTML = '';
+            area.classList.add('grid-cols-2');
+            document.getElementById('picker-title').innerText = s.label;
+            const y = calView.getFullYear(), m = calView.getMonth();
+            let html = `<div class="col-span-2 mb-4 flex justify-between px-4"><button onclick="changeCalHabit(-1, '${id}')">◄</button><span class="font-black text-xs">${new Intl.DateTimeFormat('en-US',{month:'short',year:'numeric'}).format(calView)}</span><button onclick="changeCalHabit(1, '${id}')">►</button></div>`;
+            html += `<div class="col-span-2 cal-flex mb-2">${['S','M','T','W','T','F','S'].map(d=>`<div class="cal-day text-zinc-700">${d}</div>`).join('')}</div><div class="col-span-2 cal-flex">`;
+            const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
+            for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
+            for(let i=1; i<=last; i++) {
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                const hit = db[ds] && db[ds][id+'_c'];
+                html += `<div class="cal-day ${hit ? 'day-pass' : 'bg-zinc-900'}">${i}</div>`;
+            }
+            area.innerHTML = html + '</div>';
+            document.getElementById('picker-modal').style.display = 'flex';
+        }
+
         function runStats() {
             const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
             const dates = Object.keys(db).sort();
@@ -330,38 +322,24 @@
             const start = statPeriod === 'all' ? new Date(dates[0]) : new Date(new Date().setDate(new Date().getDate() - parseInt(statPeriod)));
             const daysInRange = Math.max(1, Math.floor((new Date() - start) / 86400000) + 1);
 
-            const order = ['steps', 'prot', 'water', 'm_push', 'm_squat', 'hang', 'book', 'work', 'fin'];
-            const sorted = [...fullSchema].sort((a,b) => (order.indexOf(a.id) > -1 ? order.indexOf(a.id) : 99) - (order.indexOf(b.id) > -1 ? order.indexOf(b.id) : 99));
-
-            sorted.forEach(s => {
-                let sum = 0, count = 0, workDays = 0;
+            fullSchema.forEach(s => {
+                let sum = 0, count = 0;
                 Object.keys(db).forEach(d => {
                     if (new Date(d) >= start) {
-                        if (s.id === 'work') {
-                            const val = db[d][s.id+'_v'] || '';
-                            if (val && !val.includes('Rest')) workDays++;
-                            else if (val.includes('Rest') && val.split(',').length > 1) workDays++;
-                        } else if (s.id === 'fin' || s.type === 'chk') {
-                            if (db[d][s.id+'_c'] || db[d][s.id+'_v']) count++;
-                        } else if (db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) {
-                            sum += parseFloat(db[d][s.id+'_v']);
-                            count++;
-                        }
+                        if (db[d][s.id+'_c']) count++;
+                        if (s.type === 'pick' && db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) sum += parseFloat(db[d][s.id+'_v']);
                     }
                 });
-
-                let val;
-                if (s.id === 'work') val = Math.round((workDays/daysInRange)*100)+'%';
-                else if (s.id === 'fin' || s.type === 'chk') val = Math.round((count/daysInRange)*100)+'%';
-                else if (s.id === 'water') val = (sum/daysInRange).toFixed(1) + 'L';
-                else val = Math.round(sum/daysInRange) + (s.unit || '');
-
+                let val = (s.type === 'chk' || s.id === 'med' || s.id === 'fin' || s.id === 'work' || s.id === 'weight') 
+                    ? Math.round((count/daysInRange)*100)+'%' 
+                    : Math.round(sum/daysInRange) + (s.unit || '');
                 grid.innerHTML += `<div class="glass p-6 flex justify-between items-center"><span class="text-xs font-black text-white uppercase">${s.label}</span><span class="text-2xl font-black text-green-400 italic">${val}</span></div>`;
             });
         }
 
         function jump(d) { activeDate = d; closeModal('picker-modal'); renderLog(); }
         function changeCal(n) { calView.setMonth(calView.getMonth() + n); openCalendar(); }
+        function changeCalHabit(n, id) { calView.setMonth(calView.getMonth() + n); openHabitCalendar(id); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function shiftDay(n) { let d = new Date(activeDate); d.setDate(d.getDate() + n); activeDate = d.toISOString().split('T')[0]; renderLog(); }
         function tab(t) { 
@@ -371,7 +349,11 @@
             document.getElementById('n-'+t).classList.add('active');
             if(t==='stats') runStats();
         }
-        function save() { localStorage.setItem('THE_ULTIMATE_TRACKER_FINAL', JSON.stringify(db)); alert("SYCHRONIZED."); }
+        function save() { 
+            localStorage.setItem('ULTIMATE_TRACKER_V27', JSON.stringify(db)); 
+            const t = document.getElementById('toast'); t.style.top = '20px';
+            setTimeout(() => { t.style.top = '-100px'; }, 2000);
+        }
         renderLog();
     </script>
 </body>
