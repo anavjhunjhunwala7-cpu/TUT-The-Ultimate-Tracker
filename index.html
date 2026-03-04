@@ -47,6 +47,303 @@
                 <div class="flex flex-col items-center"><div id="conquered-circle" class="stat-circle"><span id="days-conquered" class="stat-val">0</span></div><span class="stat-label">Days<br>Conquered</span></div>
                 <div class="flex flex-col items-center"><div class="stat-circle"><span id="days-gone" class="stat-val text-white">0</span></div><span class="stat-label">Days<br>Gone By</span></div>
             </div>
+            
+            <div class="flex items-center justify-center gap-8 py-2">
+                <button onclick="shiftDay(-1)" class="text-zinc-700 text-2xl font-black p-2">◄</button>
+                <div class="flex flex-col items-center">
+                    <span id="day-name-display" class="text-[9px] font-black text-green-500 uppercase tracking-[0.3em] mb-1"></span>
+                    <button onclick="openCalendar()" class="text-[13px] font-black text-white uppercase tracking-widest border-b border-green-500/40 pb-1" id="log-date-display"></button>
+                </div>
+                <button onclick="shiftDay(1)" class="text-zinc-700 text-2xl font-black p-2">►</button>
+            </div>
+        </div>
+        <div id="log-list" class="p-4 space-y-6"></div>
+        <div class="p-4"><button onclick="save()" class="w-full py-5 glass font-black uppercase text-green-400 text-lg tracking-widest">Let's Fucking Go</button></div>
+    </div>
+
+    <div id="v-stats" class="hidden p-4 space-y-6">
+        <div class="flex justify-between items-center py-6 px-4">
+            <button onclick="toggleSortMode()" id="sort-trigger" class="ui-trigger">Arrange</button>
+            <button onclick="openPeriodPicker()" class="ui-trigger">Range: <span id="active-period">Lifetime</span> ▼</button>
+        </div>
+        <div id="stats-grid" class="grid grid-cols-1 gap-4"></div>
+        
+        <div class="glass p-6 mt-10 mb-20">
+            <h3 class="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Data Management</h3>
+            <textarea id="backup-data" class="text-[8px] h-20 mb-4 bg-black/50" placeholder="Backup string will appear here..."></textarea>
+            <div class="flex gap-2">
+                <button onclick="exportData()" class="flex-1 py-4 bg-zinc-900 border border-zinc-700 rounded-xl text-[10px] font-black uppercase tracking-widest">Copy Backup</button>
+                <button onclick="importData()" class="flex-1 py-4 bg-red-900/10 border border-red-500/50 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest">Restore</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="picker-modal" class="modal">
+        <div class="p-6 flex justify-between items-center sticky top-0 bg-[#050505] z-10 border-b border-white/5">
+            <button onclick="closeModal('picker-modal')" class="text-2xl text-zinc-500">←</button>
+            <h3 id="picker-title" class="font-black italic uppercase text-green-400 tracking-widest text-xs"></h3>
+            <button id="reset-trigger" class="text-red-500 text-lg font-black p-2">✕</button>
+        </div>
+        <div class="p-6 space-y-4" id="picker-content"><div class="grid grid-cols-2 gap-3" id="picker-options"></div></div>
+        <div id="picker-footer" class="p-6 mt-auto"></div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/5 flex p-6 pb-10 z-[1000]">
+        <div onclick="tab('log')" id="n-log" class="nav-link active">TRACK</div>
+        <div onclick="tab('stats')" id="n-stats" class="nav-link">INSIGHTS</div>
+    </nav>
+
+    <script>
+        const quotes = [{t: "NOTHING CHANGES IF NOTHING CHANGES"}, {t: "DISCIPLINE IS FREEDOM"}, {t: "WIN THE MORNING WIN THE DAY"}];
+        const categories = ["Morning Rituals", "Physical", "Mental", "Nutrition", "Vices"];
+        const genArr = (s, e, t) => Array.from({length: Math.floor((e - s) / t) + 1}, (_, i) => s + (i * t));
+        const DB_KEY = 'ULTIMATE_TRACKER_V33';
+
+        const fullSchema = [
+            { id: 'weight', label: 'Weight', type: 'text', cat: 'Morning Rituals', unit: 'kg' },
+            { id: 'm_push', label: 'Pushups', type: 'pick', options: genArr(0, 75, 5), unit: '', cat: 'Morning Rituals' },
+            { id: 'm_squat', label: 'Squats', type: 'pick', options: genArr(0, 75, 5), unit: '', cat: 'Morning Rituals' },
+            { id: 'floss', label: 'Flossing', type: 'chk', cat: 'Morning Rituals' },
+            { id: 'neeti', label: 'Jal Neeti', type: 'chk', cat: 'Morning Rituals' },
+            { id: 'fin', label: 'Finshots', type: 'text', cat: 'Mental' },
+            { id: 'hanuman', label: 'Hanuman Chalisa', type: 'chk', cat: 'Mental' },
+            { id: 'journ', label: 'Journaled', type: 'chk', cat: 'Mental' },
+            { id: 'med', label: 'Meditation', type: 'text', cat: 'Mental' },
+            { id: 'news', label: 'Newspaper', type: 'chk', cat: 'Mental' },
+            { id: 'book', label: 'Read', type: 'read', options: [5,10,15,20,25,30,40,50,60,80,100], unit: 'p', cat: 'Mental' },
+            { id: 'hang', label: 'Dead Hang', type: 'pick', options: genArr(0, 120, 10), unit: 's', cat: 'Physical' },
+            { id: 'steps', label: 'Steps', type: 'pick', options: [...genArr(8000, 15000, 250), ...genArr(15500, 20000, 500)], unit: '', cat: 'Physical' },
+            { id: 'work', label: 'Workout', type: 'multi', options: ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Walk", "Run", "Mobility", "Sports", "Rest"], cat: 'Physical' },
+            { id: 'fast', label: 'Weekly Fast', type: 'chk', cat: 'Nutrition' },
+            { id: 'creat', label: 'Creatine', type: 'pick', options: [0,1,2,3,4,5,6,7,8,9,10], unit: 'g', cat: 'Nutrition' },
+            { id: 'prot', label: 'Protein', type: 'pick', options: genArr(90, 200, 5), unit: 'g', cat: 'Nutrition' },
+            { id: 'water', label: 'Water', type: 'pick', options: [1,1.5,2,2.5,3,3.5,4,4.5,5], unit: 'L', cat: 'Nutrition' },
+            { id: 'alc', label: 'No Alcohol', type: 'chk', cat: 'Vices' },
+            { id: 'fried', label: 'No Fried', type: 'chk', cat: 'Vices' },
+            { id: 'sug', label: 'No Sugar', type: 'chk', cat: 'Vices' },
+            { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' }
+        ];
+
+        let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        let activeDate = new Date().toISOString().split('T')[0];
+        let calView = new Date();
+        let statPeriod = 'all';
+        let sortMode = false;
+        let insightOrder = JSON.parse(localStorage.getItem('INSIGHT_ORDER')) || fullSchema.map(s => s.id);
+
+        function exportData() {
+            const dataStr = JSON.stringify(db);
+            const box = document.getElementById('backup-data');
+            box.value = dataStr; box.select();
+            document.execCommand('copy');
+            showToast('Backup Copied');
+        }
+
+        function importData() {
+            const raw = document.getElementById('backup-data').value;
+            if(!raw) return;
+            if(confirm("Restore data? This will overwrite everything.")) {
+                db = JSON.parse(raw);
+                localStorage.setItem(DB_KEY, JSON.stringify(db));
+                location.reload();
+            }
+        }
+
+        function getWeekBoundaries(dateStr) {
+            let curr = new Date(dateStr);
+            let day = curr.getDay();
+            let diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+            let start = new Date(curr.setDate(diff));
+            let end = new Date(start); end.setDate(start.getDate() + 6);
+            return { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] };
+        }
+
+        function isFastingDoneThisWeek(dateStr) {
+            const bounds = getWeekBoundaries(dateStr);
+            let current = new Date(bounds.start);
+            const stop = new Date(bounds.end);
+            while (current <= stop) {
+                let d = current.toISOString().split('T')[0];
+                if (db[d] && db[d].fast_c) return true;
+                current.setDate(current.getDate() + 1);
+            }
+            return false;
+        }
+
+        function renderLog() {
+            document.getElementById('quote').innerText = quotes[new Date().getDate() % quotes.length].t;
+            const dateObj = new Date(activeDate);
+            document.getElementById('log-date-display').innerText = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            document.getElementById('day-name-display').innerText = dateObj.toLocaleDateString('en-GB', { weekday: 'long' });
+            
+            const list = document.getElementById('log-list'); list.innerHTML = '';
+            const fastDone = isFastingDoneThisWeek(activeDate);
+            categories.forEach(c => {
+                let html = `<div class="glass p-6"><h3 class="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
+                fullSchema.filter(s => s.cat === c).forEach(s => {
+                    const d = db[activeDate] || {};
+                    const val = d[s.id+'_v'] !== undefined ? d[s.id+'_v'].toString() : '';
+                    if (s.id === 'creat') d[s.id+'_c'] = (val !== '');
+                    else if (s.type !== 'chk') d[s.id+'_c'] = (val && val !== '' && val !== '0');
+                    let chk = d[s.id+'_c'] || false;
+                    if (s.id === 'fast' && fastDone) chk = true;
+                    html += `<div class="flex items-center justify-between gap-4"><div class="flex items-center gap-4 flex-shrink-0">
+                        <div onclick="${s.type === 'chk' ? `toggleCh('${s.id}')` : ''}" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${s.type !== 'chk'?'opacity-40':''}"></div>
+                        <span onclick="openHabitCalendar('${s.id}')" class="text-sm font-bold ${chk?'text-white':'text-zinc-500'} cursor-pointer uppercase">${s.label}</span>
+                    </div>`;
+                    if(s.type !== 'chk') html += `<button onclick="openPicker('${s.id}')" class="ui-trigger">${(val !== '') ? val + (s.unit || '') : 'SET'}</button>`;
+                    html += `</div>`;
+                });
+                list.innerHTML += html + `</div></div>`;
+            });
+            updateHeader();
+        }
+
+        function toggleCh(id) { if(!db[activeDate]) db[activeDate] = {}; db[activeDate][id+'_c'] = !db[activeDate][id+'_c']; renderLog(); }
+
+        function updateHeader() {
+            const dates = Object.keys(db).sort();
+            if(!dates.length) return;
+            const gone = Math.floor((new Date() - new Date(dates[0])) / 86400000) + 1;
+            document.getElementById('days-gone').innerText = gone;
+            let streak = 0, todayStr = new Date().toISOString().split('T')[0], checkDate = new Date();
+            if (((db[todayStr] && db[todayStr].daily_score) || 0) < 80) checkDate.setDate(checkDate.getDate() - 1);
+            for(let i=0; i<365; i++) {
+                let ds = checkDate.toISOString().split('T')[0];
+                if(db[ds] && db[ds].daily_score >= 80) streak++; else { if(dates.includes(ds)) break; break; }
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+            let conquered = 0; dates.forEach(d => { if(db[d].daily_score >= 80) conquered++; });
+            document.getElementById('days-conquered').innerText = conquered;
+            document.getElementById('top-streak').innerText = `🔥 ${streak}`;
+            const fastDone = isFastingDoneThisWeek(activeDate);
+            let done = fullSchema.filter(s => s.id === 'fast' ? fastDone : (db[activeDate] && db[activeDate][s.id+'_c'])).length;
+            const pct = Math.round((done/fullSchema.length)*100);
+            document.getElementById('score-val').innerText = pct+'%';
+            if(!db[activeDate]) db[activeDate] = {}; db[activeDate].daily_score = pct;
+            const cCircle = document.getElementById('conquered-circle'), cVal = document.getElementById('days-conquered');
+            if (conquered >= gone) { cCircle.style.borderColor = 'var(--neon)'; cVal.style.color = 'var(--neon)'; } 
+            else { cCircle.style.borderColor = 'var(--red)'; cVal.style.color = 'var(--red)'; }
+        }
+
+        function openPicker(id) {
+            const s = fullSchema.find(x => x.id === id);
+            const area = document.getElementById('picker-options'); area.innerHTML = '';
+            document.getElementById('picker-title').innerText = s.label;
+            document.getElementById('reset-trigger').onclick = () => resetHabit(id);
+            const curVal = (db[activeDate] && db[activeDate][id+'_v'] !== undefined) ? db[activeDate][id+'_v'].toString().split(',') : [];
+            if(s.type === 'text' || s.type === 'read') {
+                area.classList.remove('grid-cols-2');
+                let html = (s.type === 'read') ? `<div class="grid grid-cols-4 gap-2 mb-4">${s.options.map(o=>`<div onclick="handlePick('${id}','${o}',false)" class="tag-btn ${curVal.includes(o.toString())?'active':''}"><span>${o}</span></div>`).join('')}</div>` : '';
+                area.innerHTML = html + `<textarea id="txt-input">${db[activeDate][id+'_v'] || ''}</textarea>`;
+                document.getElementById('picker-footer').innerHTML = `<button onclick="handleText('${id}')" class="w-full py-5 glass text-green-400 font-black uppercase">SAVE</button>`;
+            } else {
+                area.classList.add('grid-cols-2');
+                const counts = (id==='work') ? getWorkoutCounts() : null;
+                s.options.forEach(opt => {
+                    area.innerHTML += `<div onclick="handlePick('${id}','${opt}',${s.type==='multi'})" class="tag-btn ${curVal.includes(opt.toString())?'active':''}">
+                        <span>${opt}${s.unit||''}</span> ${counts ? `<span class="tally">${counts[opt]}X</span>` : ''}
+                    </div>`;
+                });
+                if(s.type === 'multi') document.getElementById('picker-footer').innerHTML = `<button onclick="closeModal('picker-modal')" class="w-full py-5 glass text-green-400 font-black uppercase">CONFIRM</button>`;
+            }
+            document.getElementById('picker-modal').style.display = 'flex';
+        }
+
+        function handlePick(id, val, multi) {
+            if(!db[activeDate]) db[activeDate] = {};
+            let cur = (db[activeDate][id+'_v'] !== undefined) ? db[activeDate][id+'_v'].toString().split(',') : [];
+            if(multi) { cur = cur.includes(val) ? cur.filter(x => x !== val) : [...cur, val]; db[activeDate][id+'_v'] = cur.join(','); openPicker(id); }
+            else { db[activeDate][id+'_v'] = val; closeModal('picker-modal'); }
+            renderLog();
+        }
+
+        function handleText(id) { if(!db[activeDate]) db[activeDate] = {}; db[activeDate][id+'_v'] = document.getElementById('txt-input').value; closeModal('picker-modal'); renderLog(); }
+        function resetHabit(id) { if(db[activeDate]) { delete db[activeDate][id+'_v']; delete db[activeDate][id+'_c']; } closeModal('picker-modal'); renderLog(); }
+        function getWorkoutCounts() { const counts = {}; fullSchema.find(s=>s.id==='work').options.forEach(o => counts[o] = 0); Object.values(db).forEach(day => { if(day.work_v) day.work_v.split(',').forEach(v => { if(counts[v]!==undefined) counts[v]++; }); }); return counts; }
+
+        function runStats() {
+            const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
+            const dates = Object.keys(db).sort(); if(!dates.length) return;
+            const start = statPeriod === 'all' ? new Date(dates[0]) : new Date(new Date().setDate(new Date().getDate() - parseInt(statPeriod)));
+            const daysInRange = Math.max(1, Math.floor((new Date() - start) / 86400000) + 1);
+            insightOrder.forEach(id => {
+                const s = fullSchema.find(x => x.id === id);
+                let sum = 0, count = 0, wSum = 0, wDays = 0;
+                Object.keys(db).forEach(d => {
+                    if (new Date(d) >= start) {
+                        if (id === 'fast') { if (isFastingDoneThisWeek(d)) count++; }
+                        else if (db[d][s.id+'_c']) count++;
+                        let raw = db[d][s.id+'_v'];
+                        if (raw) {
+                            let match = raw.toString().match(/\d+(\.\d+)?/);
+                            let num = match ? parseFloat(match[0]) : NaN;
+                            if (!isNaN(num)) { if (s.id === 'weight') { wSum += num; wDays++; } else { sum += num; } }
+                        }
+                    }
+                });
+                let val = (s.id === 'weight') ? (wDays > 0 ? (wSum/wDays).toFixed(1) + 'kg' : '0kg') : 
+                          ((s.type === 'chk' || s.id === 'med' || s.id === 'fin' || s.id === 'work' || s.id === 'fast') ? Math.round((count/daysInRange)*100)+'%' : Math.round(sum/daysInRange) + (s.unit || ''));
+                grid.innerHTML += `<div class="glass p-6 flex justify-between items-center"><div class="flex items-center gap-4">
+                    ${sortMode ? `<button onclick="promote('${s.id}')" class="text-green-500 font-black">▲</button>` : ''}
+                    <span class="text-xs font-black text-white uppercase">${s.label}</span></div>
+                    <span class="text-2xl font-black text-green-400 italic">${val}</span></div>`;
+            });
+        }
+
+        function promote(id) { insightOrder = [id, ...insightOrder.filter(x => x !== id)]; localStorage.setItem('INSIGHT_ORDER', JSON.stringify(insightOrder)); runStats(); }
+        function toggleSortMode() { sortMode = !sortMode; document.getElementById('sort-trigger').innerText = sortMode ? 'Finish' : 'Arrange'; runStats(); }
+        function openCalendar() { document.getElementById('picker-title').innerText = "CALENDAR"; openCalendarContent(); }
+        function openCalendarContent() {
+            const area = document.getElementById('picker-options'); area.innerHTML = ''; area.classList.add('grid-cols-2');
+            const y = calView.getFullYear(), m = calView.getMonth();
+            let html = `<div class="col-span-2 mb-4 flex justify-between px-4"><button onclick="changeCal(-1)">◄</button><span class="font-black text-xs">${new Intl.DateTimeFormat('en-US',{month:'short',year:'numeric'}).format(calView)}</span><button onclick="changeCal(1)">►</button></div><div class="col-span-2 cal-flex mb-2">${['S','M','T','W','T','F','S'].map(d=>`<div class="cal-day text-zinc-700">${d}</div>`).join('')}</div><div class="col-span-2 cal-flex">`;
+            const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
+            for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
+            for(let i=1; i<=last; i++) {
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`, score = (db[ds] && db[ds].daily_score) || 0;
+                html += `<div onclick="jump('${ds}')" class="cal-day ${score >= 80 ? 'day-pass' : (score > 0 ? 'day-fail' : 'bg-zinc-900')} ${ds===activeDate?'border-2 border-white':''}">${i}<span class="day-score">${score}%</span></div>`;
+            }
+            area.innerHTML = html + '</div>'; document.getElementById('picker-modal').style.display = 'flex';
+        }
+        function openHabitCalendar(id) { document.getElementById('picker-title').innerText = fullSchema.find(s=>s.id===id).label; openHabitContent(id); }
+        function openHabitContent(id) {
+            const area = document.getElementById('picker-options'); area.innerHTML = '';
+            const y = calView.getFullYear(), m = calView.getMonth();
+            let html = `<div class="col-span-2 mb-4 flex justify-between px-4"><button onclick="changeHabitCal(-1,'${id}')">◄</button><span class="font-black text-xs">${new Intl.DateTimeFormat('en-US',{month:'short',year:'numeric'}).format(calView)}</span><button onclick="changeHabitCal(1,'${id}')">►</button></div><div class="col-span-2 cal-flex mb-2">${['S','M','T','W','T','F','S'].map(d=>`<div class="cal-day text-zinc-700">${d}</div>`).join('')}</div><div class="col-span-2 cal-flex">`;
+            const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
+            for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
+            for(let i=1; i<=last; i++) { 
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                let active = (id === 'fast') ? isFastingDoneThisWeek(ds) : (db[ds] && db[ds][id+'_c']);
+                html += `<div class="cal-day ${active ? 'day-pass' : 'bg-zinc-900'}">${i}</div>`; 
+            }
+            area.innerHTML = html + '</div>'; document.getElementById('picker-modal').style.display = 'flex';
+        }
+        function changeCal(n) { calView.setMonth(calView.getMonth() + n); openCalendarContent(); }
+        function changeHabitCal(n, id) { calView.setMonth(calView.getMonth() + n); openHabitContent(id); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function shiftDay(n) { let d = new Date(activeDate); d.setDate(d.getDate() + n); activeDate = d.toISOString().split('T')[0]; renderLog(); }
+        function jump(d) { activeDate = d; closeModal('picker-modal'); renderLog(); }
+        function tab(t) { document.getElementById('v-log').classList.toggle('hidden', t !== 'log'); document.getElementById('v-stats').classList.toggle('hidden', t !== 'stats'); document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active')); document.getElementById('n-'+t).classList.add('active'); if(t==='stats') runStats(); }
+        function save() { localStorage.setItem(DB_KEY, JSON.stringify(db)); showToast('Locked In'); updateHeader(); }
+        function showToast(m) { const t = document.getElementById('toast'); t.querySelector('span').innerText = m; t.style.top = '20px'; setTimeout(() => { t.style.top = '-100px'; }, 2000); }
+        renderLog();
+    </script>
+</body>
+</html>
+    <div id="toast"><span>Locked In</span></div>
+
+    <div id="v-log">
+        <div class="sticky-header text-center">
+            <div id="top-streak" class="streak-top">🔥 0</div>
+            <h1 class="text-[10px] font-black tracking-[0.4em] text-zinc-600 mb-5 uppercase">The Ultimate Tracker</h1>
+            <div class="px-6 mb-8"><p id="quote" class="text-xl font-black italic uppercase leading-tight"></p></div>
+            <div class="flex justify-center items-start gap-4 mb-6">
+                <div class="flex flex-col items-center"><div class="stat-circle"><span id="score-val" class="stat-val text-green-400">0%</span></div><span class="stat-label">Completed</span></div>
+                <div class="flex flex-col items-center"><div id="conquered-circle" class="stat-circle"><span id="days-conquered" class="stat-val">0</span></div><span class="stat-label">Days<br>Conquered</span></div>
+                <div class="flex flex-col items-center"><div class="stat-circle"><span id="days-gone" class="stat-val text-white">0</span></div><span class="stat-label">Days<br>Gone By</span></div>
+            </div>
             <div class="flex items-center justify-center gap-10 py-2">
                 <button onclick="shiftDay(-1)" class="text-zinc-700 text-2xl font-black p-2">◄</button>
                 <button onclick="openCalendar()" class="text-[13px] font-black text-white uppercase tracking-widest border-b border-green-500/40 pb-1" id="log-date-display"></button>
