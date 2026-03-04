@@ -19,7 +19,10 @@
         .day-pass { background: #15803d !important; border: 1px solid #22c55e; }
         .day-fail { background: #b91c1c !important; border: 1px solid #ef4444; }
         .day-score { font-size: 0.5rem; opacity: 0.7; margin-top: 2px; }
+        
+        /* EXPANDED BUTTONS */
         .ui-trigger { background: transparent !important; color: var(--neon) !important; border: 1px solid rgba(34, 197, 94, 0.4) !important; border-radius: 8px; padding: 6px 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; min-width: 80px; text-align: center; white-space: normal; line-height: 1.2; word-break: break-word; }
+        
         .modal { position: fixed; inset: 0; background: #050505; z-index: 2000; display: none; flex-direction: column; overflow-y: auto; }
         .tag-btn { padding: 12px 6px; border-radius: 12px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         .tag-btn span:first-child { font-size: 11px; font-weight: 900; text-transform: uppercase; color: #666; }
@@ -100,6 +103,7 @@
             { id: 'hang', label: 'Dead Hang', type: 'pick', options: genArr(0, 120, 10), unit: 's', cat: 'Physical' },
             { id: 'steps', label: 'Steps', type: 'pick', options: [...genArr(8000, 15000, 250), ...genArr(15500, 20000, 500)], unit: '', cat: 'Physical' },
             { id: 'work', label: 'Workout', type: 'multi', options: ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Walk", "Run", "Mobility", "Sports", "Rest"], cat: 'Physical' },
+            { id: 'fast', label: 'Weekly Fast', type: 'chk', cat: 'Nutrition' },
             { id: 'creat', label: 'Creatine', type: 'pick', options: [0,1,2,3,4,5,6,7,8,9,10], unit: 'g', cat: 'Nutrition' },
             { id: 'prot', label: 'Protein', type: 'pick', options: genArr(90, 200, 5), unit: 'g', cat: 'Nutrition' },
             { id: 'water', label: 'Water', type: 'pick', options: [1,1.5,2,2.5,3,3.5,4,4.5,5], unit: 'L', cat: 'Nutrition' },
@@ -109,25 +113,53 @@
             { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('ULTIMATE_TRACKER_V32')) || {};
+        let db = JSON.parse(localStorage.getItem('ULTIMATE_TRACKER_V33')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
         let statPeriod = 'all';
         let sortMode = false;
         let insightOrder = JSON.parse(localStorage.getItem('INSIGHT_ORDER')) || fullSchema.map(s => s.id);
 
+        function getWeekBoundaries(dateStr) {
+            let curr = new Date(dateStr);
+            let day = curr.getDay(); // 0=Sun, 1=Mon...
+            let diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+            let start = new Date(curr.setDate(diff));
+            let end = new Date(start); end.setDate(start.getDate() + 6);
+            return { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] };
+        }
+
+        function isFastingDoneThisWeek(dateStr) {
+            const bounds = getWeekBoundaries(dateStr);
+            let current = new Date(bounds.start);
+            const stop = new Date(bounds.end);
+            while (current <= stop) {
+                let d = current.toISOString().split('T')[0];
+                if (db[d] && db[d].fast_c) return true;
+                current.setDate(current.getDate() + 1);
+            }
+            return false;
+        }
+
         function renderLog() {
             document.getElementById('quote').innerText = quotes[new Date().getDate() % quotes.length].t;
             document.getElementById('log-date-display').innerText = new Date(activeDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
             const list = document.getElementById('log-list'); list.innerHTML = '';
+            
+            const fastDone = isFastingDoneThisWeek(activeDate);
+
             categories.forEach(c => {
                 let html = `<div class="glass p-6"><h3 class="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
                 fullSchema.filter(s => s.cat === c).forEach(s => {
                     const d = db[activeDate] || {};
                     const val = d[s.id+'_v'] !== undefined ? d[s.id+'_v'].toString() : '';
+                    
                     if (s.id === 'creat') d[s.id+'_c'] = (val !== '');
                     else if (s.type !== 'chk') d[s.id+'_c'] = (val && val !== '' && val !== '0');
-                    const chk = d[s.id+'_c'] || false;
+                    
+                    let chk = d[s.id+'_c'] || false;
+                    if (s.id === 'fast' && fastDone) chk = true;
+
                     const btnLabel = (val !== '') ? val + (s.unit || '') : 'SET';
                     html += `<div class="flex items-center justify-between gap-4"><div class="flex items-center gap-4 flex-shrink-0">
                         <div onclick="${s.type === 'chk' ? `toggleCh('${s.id}')` : ''}" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${s.type !== 'chk'?'opacity-40':''}"></div>
@@ -148,6 +180,7 @@
             if(!dates.length) return;
             const gone = Math.floor((new Date() - new Date(dates[0])) / 86400000) + 1;
             document.getElementById('days-gone').innerText = gone;
+            
             let streak = 0, todayStr = new Date().toISOString().split('T')[0], checkDate = new Date();
             if (((db[todayStr] && db[todayStr].daily_score) || 0) < 80) checkDate.setDate(checkDate.getDate() - 1);
             for(let i=0; i<365; i++) {
@@ -155,17 +188,25 @@
                 if(db[ds] && db[ds].daily_score >= 80) streak++; else { if(dates.includes(ds)) break; break; }
                 checkDate.setDate(checkDate.getDate() - 1);
             }
+            
             let conquered = 0; dates.forEach(d => { if(db[d].daily_score >= 80) conquered++; });
             document.getElementById('days-conquered').innerText = conquered;
             document.getElementById('top-streak').innerText = `🔥 ${streak}`;
-            const cCircle = document.getElementById('conquered-circle'), cVal = document.getElementById('days-conquered');
-            if (conquered >= gone) { cCircle.style.borderColor = 'var(--neon)'; cVal.style.color = 'var(--neon)'; } 
-            else { cCircle.style.borderColor = 'var(--red)'; cVal.style.color = 'var(--red)'; }
+            
             const d = db[activeDate] || {};
-            let done = fullSchema.filter(s => d[s.id+'_c']).length;
+            const fastDone = isFastingDoneThisWeek(activeDate);
+            let done = fullSchema.filter(s => {
+                if (s.id === 'fast') return fastDone;
+                return d[s.id+'_c'];
+            }).length;
+            
             const pct = Math.round((done/fullSchema.length)*100);
             document.getElementById('score-val').innerText = pct+'%';
             if(!db[activeDate]) db[activeDate] = {}; db[activeDate].daily_score = pct;
+            
+            const cCircle = document.getElementById('conquered-circle'), cVal = document.getElementById('days-conquered');
+            if (conquered >= gone) { cCircle.style.borderColor = 'var(--neon)'; cVal.style.color = 'var(--neon)'; } 
+            else { cCircle.style.borderColor = 'var(--red)'; cVal.style.color = 'var(--red)'; }
         }
 
         function openPicker(id) {
@@ -215,7 +256,9 @@
                 let sum = 0, count = 0, wSum = 0, wDays = 0;
                 Object.keys(db).forEach(d => {
                     if (new Date(d) >= start) {
-                        if (db[d][s.id+'_c']) count++;
+                        if (id === 'fast') { if (isFastingDoneThisWeek(d)) count++; }
+                        else if (db[d][s.id+'_c']) count++;
+                        
                         let raw = db[d][s.id+'_v'];
                         if (raw) {
                             let match = raw.toString().match(/\d+(\.\d+)?/);
@@ -228,7 +271,7 @@
                     }
                 });
                 let val = (s.id === 'weight') ? (wDays > 0 ? (wSum/wDays).toFixed(1) + 'kg' : '0kg') : 
-                          ((s.type === 'chk' || s.id === 'med' || s.id === 'fin' || s.id === 'work') ? Math.round((count/daysInRange)*100)+'%' : Math.round(sum/daysInRange) + (s.unit || ''));
+                          ((s.type === 'chk' || s.id === 'med' || s.id === 'fin' || s.id === 'work' || s.id === 'fast') ? Math.round((count/daysInRange)*100)+'%' : Math.round(sum/daysInRange) + (s.unit || ''));
                 grid.innerHTML += `<div class="glass p-6 flex justify-between items-center"><div class="flex items-center gap-4">
                     ${sortMode ? `<button onclick="promote('${s.id}')" class="text-green-500 font-black">▲</button>` : ''}
                     <span class="text-xs font-black text-white uppercase">${s.label}</span></div>
@@ -258,7 +301,11 @@
             let html = `<div class="col-span-2 mb-4 flex justify-between px-4"><button onclick="changeHabitCal(-1,'${id}')">◄</button><span class="font-black text-xs">${new Intl.DateTimeFormat('en-US',{month:'short',year:'numeric'}).format(calView)}</span><button onclick="changeHabitCal(1,'${id}')">►</button></div><div class="col-span-2 cal-flex mb-2">${['S','M','T','W','T','F','S'].map(d=>`<div class="cal-day text-zinc-700">${d}</div>`).join('')}</div><div class="col-span-2 cal-flex">`;
             const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
             for(let i=0; i<first; i++) html += '<div class="cal-day"></div>';
-            for(let i=1; i<=last; i++) { const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`; html += `<div class="cal-day ${db[ds] && db[ds][id+'_c'] ? 'day-pass' : 'bg-zinc-900'}">${i}</div>`; }
+            for(let i=1; i<=last; i++) { 
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                let active = (id === 'fast') ? isFastingDoneThisWeek(ds) : (db[ds] && db[ds][id+'_c']);
+                html += `<div class="cal-day ${active ? 'day-pass' : 'bg-zinc-900'}">${i}</div>`; 
+            }
             area.innerHTML = html + '</div>'; document.getElementById('picker-modal').style.display = 'flex';
         }
         function changeCal(n) { calView.setMonth(calView.getMonth() + n); openCalendarContent(); }
@@ -267,7 +314,7 @@
         function shiftDay(n) { let d = new Date(activeDate); d.setDate(d.getDate() + n); activeDate = d.toISOString().split('T')[0]; renderLog(); }
         function jump(d) { activeDate = d; closeModal('picker-modal'); renderLog(); }
         function tab(t) { document.getElementById('v-log').classList.toggle('hidden', t !== 'log'); document.getElementById('v-stats').classList.toggle('hidden', t !== 'stats'); document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active')); document.getElementById('n-'+t).classList.add('active'); if(t==='stats') runStats(); }
-        function save() { localStorage.setItem('ULTIMATE_TRACKER_V32', JSON.stringify(db)); const t = document.getElementById('toast'); t.style.top = '20px'; setTimeout(() => { t.style.top = '-100px'; }, 2000); updateHeader(); }
+        function save() { localStorage.setItem('ULTIMATE_TRACKER_V33', JSON.stringify(db)); const t = document.getElementById('toast'); t.style.top = '20px'; setTimeout(() => { t.style.top = '-100px'; }, 2000); updateHeader(); }
         renderLog();
     </script>
 </body>
