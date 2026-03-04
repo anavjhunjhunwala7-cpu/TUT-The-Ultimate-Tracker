@@ -12,26 +12,27 @@
         .sticky-header { position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #050505 90%, transparent); backdrop-filter: blur(15px); padding: 15px 0 20px; }
         .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; }
 
-        /* HEADER & STATS */
-        .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
+        /* STAT CIRCLES */
+        .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; transition: border-color 0.4s; }
         .stat-label { font-size: 7px; font-weight: 900; color: #555; text-transform: uppercase; margin-top: 4px; text-align: center; line-height: 1.1; }
         .stat-val { font-size: 16px; font-weight: 900; }
         .streak-top { position: absolute; left: 20px; top: 18px; font-size: 12px; font-weight: 900; color: #fbbf24; letter-spacing: 1px; z-index: 110; }
 
-        /* CALENDAR UI */
+        /* CALENDAR */
         .cal-flex { display: flex; flex-wrap: wrap; width: 100%; }
         .cal-day { width: 14.28%; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; border-radius: 8px; position: relative; }
         .day-pass { background: #15803d !important; border: 1px solid #22c55e; }
         .day-fail { background: #b91c1c !important; border: 1px solid #ef4444; }
         .day-score { font-size: 0.5rem; opacity: 0.7; margin-top: 2px; }
 
-        /* PICKER & UI COMPONENTS */
+        /* UI COMPONENTS */
         .ui-trigger { background: transparent !important; color: var(--neon) !important; border: 1px solid rgba(34, 197, 94, 0.4) !important; border-radius: 8px; padding: 6px 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; min-width: 70px; text-align: center; }
         .modal { position: fixed; inset: 0; background: #050505; z-index: 2000; display: none; flex-direction: column; overflow-y: auto; }
-        .tag-btn { padding: 12px 6px; border-radius: 12px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .tag-btn { padding: 12px 6px; border-radius: 12px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         .tag-btn span:first-child { font-size: 11px; font-weight: 900; text-transform: uppercase; color: #666; }
         .tag-btn.active { border-color: var(--neon); background: rgba(34,197,94,0.05); }
         .tag-btn.active span:first-child { color: #fff; }
+        .tally { font-size: 10px; font-weight: 900; color: var(--neon); margin-top: 2px; }
         
         textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 15px; width: 100%; height: 120px; outline: none; font-weight: 700; }
         .locked-chk { opacity: 0.3; pointer-events: none; }
@@ -39,7 +40,7 @@
         .nav-link.active { color: var(--neon); }
         .reset-btn { color: var(--red); font-size: 18px; font-weight: 900; padding: 10px; }
 
-        /* CUSTOM TOAST */
+        /* TOAST */
         #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 300px; background: #000; border: 2px solid var(--neon); padding: 20px; border-radius: 15px; text-align: center; z-index: 5000; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         #toast span { color: var(--neon); font-weight: 900; font-style: italic; letter-spacing: 2px; text-transform: uppercase; }
     </style>
@@ -124,7 +125,7 @@
             { id: 'book', label: 'Read', type: 'read', options: [5,10,15,20,25,30,40,50,60,80,100], unit: 'p', cat: 'Mental' },
             { id: 'hang', label: 'Dead Hang', type: 'pick', options: genArr(0, 120, 10), unit: 's', cat: 'Physical' },
             { id: 'steps', label: 'Steps', type: 'pick', options: stepArr, unit: '', cat: 'Physical' },
-            { id: 'work', label: 'Workout', type: 'multi', options: ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Walk", "Run", "Rest", "Other"], cat: 'Physical' },
+            { id: 'work', label: 'Workout', type: 'multi', options: ["Back", "Biceps", "Shoulders", "Triceps", "Chest", "Legs", "Core", "Walk", "Run", "Mobility", "Sports", "Rest"], cat: 'Physical' },
             { id: 'creat', label: 'Creatine', type: 'pick', options: [0,1,2,3,4,5,6,7,8,9,10], unit: 'g', cat: 'Nutrition' },
             { id: 'prot', label: 'Protein', type: 'pick', options: genArr(90, 200, 5), unit: 'g', cat: 'Nutrition' },
             { id: 'water', label: 'Water', type: 'pick', options: [1,1.5,2,2.5,3,3.5,4,4.5,5], unit: 'L', cat: 'Nutrition' },
@@ -134,7 +135,7 @@
             { id: 'smoke', label: 'No Smoking', type: 'chk', cat: 'Vices' }
         ];
 
-        let db = JSON.parse(localStorage.getItem('ULTIMATE_TRACKER_V27')) || {};
+        let db = JSON.parse(localStorage.getItem('ULTIMATE_TRACKER_V28')) || {};
         let activeDate = new Date().toISOString().split('T')[0];
         let calView = new Date();
         let statPeriod = 'all';
@@ -152,18 +153,19 @@
                 let html = `<div class="glass p-6"><h3 class="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">${c}</h3><div class="space-y-6">`;
                 fullSchema.filter(s => s.cat === c).forEach(s => {
                     const d = db[activeDate] || {};
-                    const val = d[s.id+'_v'] || '';
+                    const val = d[s.id+'_v'] !== undefined ? d[s.id+'_v'].toString() : '';
                     const isSelect = (s.type === 'pick' || s.type === 'read' || s.type === 'multi' || s.type === 'text');
                     
                     if (isSelect) {
-                        d[s.id+'_c'] = (val && val !== '' && val !== '0');
+                        if (s.id === 'creat') d[s.id+'_c'] = (val !== '');
+                        else d[s.id+'_c'] = (val && val !== '' && val !== '0');
                     }
                     
                     const chk = d[s.id+'_c'] || false;
                     html += `<div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
                             <div onclick="${(s.type === 'chk') ? `toggleCh('${s.id}')` : ''}" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${(s.type !== 'chk')?'locked-chk':''}"></div>
-                            <span onclick="openHabitCalendar('${s.id}')" class="text-sm font-bold ${chk?'text-white':'text-zinc-500'} cursor-pointer">${s.label} ${s.type==='text' && val ? `<span class="text-zinc-600 ml-2">[${val}]</span>` : ''}</span>
+                            <span onclick="openHabitCalendar('${s.id}')" class="text-sm font-bold ${chk?'text-white':'text-zinc-500'} cursor-pointer uppercase">${s.label} ${val && s.id==='weight' ? `<span class="text-zinc-600 ml-1">[${val}]</span>` : ''}</span>
                         </div>`;
                     if(s.type !== 'chk') html += `<button onclick="openPicker('${s.id}')" class="ui-trigger">${val !== '' ? 'VIEW' : 'SET'}</button>`;
                     html += `</div>`;
@@ -178,7 +180,6 @@
         function updateHeader() {
             const dates = Object.keys(db).sort();
             if(!dates.length) return;
-
             const firstDate = new Date(dates[0]);
             const gone = Math.floor((new Date() - firstDate) / 86400000) + 1;
             document.getElementById('days-gone').innerText = gone;
@@ -186,32 +187,34 @@
             let streak = 0;
             const todayStr = new Date().toISOString().split('T')[0];
             let checkDate = new Date();
-            
             if (((db[todayStr] && db[todayStr].daily_score) || 0) < 80) checkDate.setDate(checkDate.getDate() - 1);
-
             for(let i=0; i<365; i++) {
                 let ds = checkDate.toISOString().split('T')[0];
                 if(db[ds] && db[ds].daily_score >= 80) streak++;
                 else { if(dates.includes(ds)) break; break; }
                 checkDate.setDate(checkDate.getDate() - 1);
             }
-
             let conquered = 0;
             dates.forEach(d => { if(db[d].daily_score >= 80) conquered++; });
-
             document.getElementById('days-conquered').innerText = conquered;
             document.getElementById('top-streak').innerText = `🔥 ${streak}`;
-            
             const circ = document.getElementById('conquered-circle');
             circ.style.borderColor = conquered >= gone ? '#22c55e' : '#ef4444';
             document.getElementById('days-conquered').className = `stat-val ${conquered >= gone ? 'text-green-400' : 'text-red-500'}`;
-
             const d = db[activeDate] || {};
             let done = fullSchema.filter(s => d[s.id+'_c']).length;
             const pct = Math.round((done/fullSchema.length)*100);
             document.getElementById('score-val').innerText = pct+'%';
-            if(!db[activeDate]) db[activeDate] = {};
-            db[activeDate].daily_score = pct;
+            if(!db[activeDate]) db[activeDate] = {}; db[activeDate].daily_score = pct;
+        }
+
+        function getWorkoutCounts() {
+            const counts = {};
+            fullSchema.find(s=>s.id==='work').options.forEach(o => counts[o] = 0);
+            Object.values(db).forEach(day => {
+                if(day.work_v) day.work_v.split(',').forEach(v => { if(counts[v]!==undefined) counts[v]++; });
+            });
+            return counts;
         }
 
         function openPicker(id) {
@@ -221,7 +224,7 @@
             document.getElementById('picker-title').innerText = s.label;
             document.getElementById('reset-trigger').style.display = 'block';
             document.getElementById('reset-trigger').onclick = () => resetHabit(id);
-            const curVal = (db[activeDate] && db[activeDate][id+'_v']) ? db[activeDate][id+'_v'].toString().split(',') : [];
+            const curVal = (db[activeDate] && db[activeDate][id+'_v'] !== undefined) ? db[activeDate][id+'_v'].toString().split(',') : [];
 
             if(s.type === 'text' || s.type === 'read') {
                 area.classList.remove('grid-cols-2');
@@ -234,14 +237,18 @@
                     });
                     html += `</div>`;
                 }
-                html += `<textarea id="txt-input" placeholder="${s.id==='weight'?'Enter weight...':'Notes...'}">${db[activeDate][id+'_v'] || ''}</textarea>`;
+                html += `<textarea id="txt-input" placeholder="${s.id==='weight'?'Enter weight (kg)...':'Notes...'}">${db[activeDate][id+'_v'] || ''}</textarea>`;
                 area.innerHTML = html;
-                footer.innerHTML = `<button onclick="handleText('${id}')" class="w-full py-5 glass text-green-400 font-black uppercase">SAVE</button>`;
+                footer.innerHTML = `<button onclick="handleText('${id}')" class="w-full py-5 glass text-green-400 font-black uppercase tracking-widest">SAVE</button>`;
             } else {
                 area.classList.add('grid-cols-2');
+                const counts = (id==='work') ? getWorkoutCounts() : null;
                 s.options.forEach(opt => {
                     const active = curVal.includes(opt.toString());
-                    area.innerHTML += `<div onclick="handlePick('${id}', '${opt}', ${s.type==='multi'})" class="tag-btn ${active?'active':''}"><span>${opt}${s.unit||''}</span></div>`;
+                    area.innerHTML += `<div onclick="handlePick('${id}', '${opt}', ${s.type==='multi'})" class="tag-btn ${active?'active':''}">
+                        <span>${opt}${s.unit||''}</span>
+                        ${counts ? `<span class="tally">${counts[opt]}X</span>` : ''}
+                    </div>`;
                 });
                 if(s.type === 'multi') footer.innerHTML = `<button onclick="closeModal('picker-modal')" class="w-full py-5 glass text-green-400 font-black uppercase tracking-widest">CONFIRM</button>`;
             }
@@ -261,7 +268,7 @@
 
         function handlePick(id, val, multi) {
             if(!db[activeDate]) db[activeDate] = {};
-            let cur = (db[activeDate][id+'_v']) ? db[activeDate][id+'_v'].toString().split(',') : [];
+            let cur = (db[activeDate][id+'_v'] !== undefined) ? db[activeDate][id+'_v'].toString().split(',') : [];
             if(multi) {
                 cur = cur.includes(val) ? cur.filter(x => x !== val) : [...cur, val];
                 db[activeDate][id+'_v'] = cur.join(',');
@@ -323,16 +330,22 @@
             const daysInRange = Math.max(1, Math.floor((new Date() - start) / 86400000) + 1);
 
             fullSchema.forEach(s => {
-                let sum = 0, count = 0;
+                let sum = 0, count = 0, weightDays = 0, weightSum = 0;
                 Object.keys(db).forEach(d => {
                     if (new Date(d) >= start) {
                         if (db[d][s.id+'_c']) count++;
-                        if (s.type === 'pick' && db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) sum += parseFloat(db[d][s.id+'_v']);
+                        if (s.id === 'weight' && db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) {
+                            weightSum += parseFloat(db[d][s.id+'_v']);
+                            weightDays++;
+                        } else if (s.type === 'pick' && db[d][s.id+'_v'] && !isNaN(db[d][s.id+'_v'])) {
+                            sum += parseFloat(db[d][s.id+'_v']);
+                        }
                     }
                 });
-                let val = (s.type === 'chk' || s.id === 'med' || s.id === 'fin' || s.id === 'work' || s.id === 'weight') 
-                    ? Math.round((count/daysInRange)*100)+'%' 
-                    : Math.round(sum/daysInRange) + (s.unit || '');
+                let val;
+                if (s.id === 'weight') val = weightDays > 0 ? (weightSum/weightDays).toFixed(1) + 'kg' : '0kg';
+                else if (s.type === 'chk' || s.id === 'med' || s.id === 'fin' || s.id === 'work') val = Math.round((count/daysInRange)*100)+'%';
+                else val = Math.round(sum/daysInRange) + (s.unit || '');
                 grid.innerHTML += `<div class="glass p-6 flex justify-between items-center"><span class="text-xs font-black text-white uppercase">${s.label}</span><span class="text-2xl font-black text-green-400 italic">${val}</span></div>`;
             });
         }
@@ -350,9 +363,10 @@
             if(t==='stats') runStats();
         }
         function save() { 
-            localStorage.setItem('ULTIMATE_TRACKER_V27', JSON.stringify(db)); 
+            localStorage.setItem('ULTIMATE_TRACKER_V28', JSON.stringify(db)); 
             const t = document.getElementById('toast'); t.style.top = '20px';
             setTimeout(() => { t.style.top = '-100px'; }, 2000);
+            updateHeader();
         }
         renderLog();
     </script>
