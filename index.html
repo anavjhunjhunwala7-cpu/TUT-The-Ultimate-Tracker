@@ -10,14 +10,14 @@
         body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
         .sticky-header { position: sticky; top: 0; z-index: 100; background: #050505; padding: 15px 0 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; }
-        .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
+        .stat-circle { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; transition: border-color 0.3s; }
         .stat-val { font-size: 16px; font-weight: 900; }
         .stat-label { font-size: 7px; font-weight: 900; color: #555; text-transform: uppercase; margin-top: 4px; text-align: center; line-height: 1.1; }
         .streak-top { position: absolute; left: 20px; top: 18px; font-size: 12px; font-weight: 900; color: #fbbf24; z-index: 110; }
         .ui-trigger { background: transparent; color: var(--neon); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 8px; padding: 6px 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         .period-btn { padding: 8px 14px; border-radius: 10px; font-size: 9px; font-weight: 900; color: #444; border: 1px solid #222; white-space: nowrap; }
         .period-btn.active { color: var(--neon); border-color: var(--neon); background: rgba(34,197,94,0.05); }
-        .cal-day { width: 14.28%; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; border-radius: 8px; }
+        .cal-day { width: 14.28%; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; border-radius: 8px; margin-bottom: 4px; }
         .day-pass { background: #15803d !important; border: 1px solid #22c55e; }
         .day-fail { background: #b91c1c !important; border: 1px solid #ef4444; }
         .modal { position: fixed; inset: 0; background: #050505; z-index: 2000; display: none; flex-direction: column; overflow-y: auto; }
@@ -25,6 +25,7 @@
         .nav-link.active { color: var(--neon); }
         #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; background: #000; border: 2px solid var(--neon); padding: 20px; border-radius: 15px; text-align: center; z-index: 5000; transition: top 0.4s; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .tag-btn { padding: 12px 8px; border-radius: 12px; border: 1px solid #222; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); }
     </style>
 </head>
 <body class="pb-32">
@@ -38,7 +39,7 @@
             <div class="px-6 mb-8"><p id="quote" class="text-xl font-black italic uppercase leading-tight"></p></div>
             <div class="flex justify-center items-start gap-4 mb-6">
                 <div class="flex flex-col items-center"><div class="stat-circle"><span id="score-val" class="stat-val text-green-400">0%</span></div><span class="stat-label">Completed</span></div>
-                <div class="flex flex-col items-center"><div id="conquered-circle" class="stat-circle"><span id="days-conquered" class="stat-val">0</span></div><span class="stat-label">Conquered</span></div>
+                <div class="flex flex-col items-center"><div id="conq-circle" class="stat-circle"><span id="days-conquered" class="stat-val">0</span></div><span class="stat-label">Conquered</span></div>
                 <div class="flex flex-col items-center"><div class="stat-circle"><span id="days-gone" class="stat-val text-white">0</span></div><span class="stat-label">Gone By</span></div>
             </div>
             <div class="flex items-center justify-center gap-8">
@@ -84,7 +85,7 @@
         <div class="p-6 flex justify-between items-center border-b border-white/5">
             <button onclick="closeModal('picker-modal')" class="text-2xl">←</button>
             <h3 id="picker-title" class="font-black italic uppercase text-green-400 text-xs"></h3>
-            <button id="reset-trigger" class="text-red-500 font-black">✕</button>
+            <button id="reset-trigger" onclick="closeModal('picker-modal')" class="text-red-500 font-black">✕</button>
         </div>
         <div class="p-6" id="picker-options"></div>
         <div id="picker-footer" class="p-6 mt-auto"></div>
@@ -139,7 +140,7 @@
             const list = document.getElementById('log-list'); list.innerHTML = '';
             const fastDone = isFastingDoneThisWeek(activeDate);
             categories.forEach(c => {
-                let html = `<div class="glass p-6"><h3 class="text-[10px] font-black text-zinc-600 mb-6 border-b border-white/5 pb-2 uppercase">${c}</h3><div class="space-y-6">`;
+                let html = `<div class="glass p-6"><h3 class="text-[10px] font-black text-zinc-600 mb-6 border-b border-white/5 pb-2 uppercase text-center">${c}</h3><div class="space-y-6">`;
                 fullSchema.filter(s => s.cat === c).forEach(s => {
                     const d = db[activeDate] || {};
                     let chk = d[s.id+'_c'] || false;
@@ -148,7 +149,7 @@
                     html += `<div class="flex items-center justify-between gap-4">
                         <div class="flex items-center gap-4">
                             <div onclick="${s.type==='chk'?`toggleCh('${s.id}')`:''}" class="w-7 h-7 border-2 border-zinc-700 rounded-lg ${chk?'bg-green-500 border-green-500':''} ${s.type!=='chk'?'opacity-30':''}"></div>
-                            <span class="text-sm font-bold ${chk?'text-white':'text-zinc-500'} uppercase">${s.label}</span>
+                            <span onclick="openCalendar()" class="text-sm font-bold ${chk?'text-white':'text-zinc-500'} uppercase">${s.label}</span>
                         </div>`;
                     if(s.type !== 'chk') html += `<button onclick="openPicker('${s.id}')" class="ui-trigger">${val?val+(s.unit||''):'SET'}</button>`;
                     html += `</div>`;
@@ -171,8 +172,11 @@
             
             document.getElementById('score-val').innerText = pct+'%';
             document.getElementById('days-gone').innerText = dates.length ? Math.floor((new Date()-new Date(dates[0]))/86400000)+1 : 0;
-            let conq = 0; Object.keys(db).forEach(d => { if(d <= today && db[d].daily_score >= 80) conq++; });
+            
+            let conq = 0; 
+            Object.keys(db).forEach(d => { if(d <= today && db[d].daily_score >= 80) conq++; });
             document.getElementById('days-conquered').innerText = conq;
+            document.getElementById('conq-circle').style.borderColor = (pct >= 80) ? '#22c55e' : '#222';
 
             // Streak Logic
             let streak = 0, checkDate = new Date();
@@ -183,6 +187,34 @@
                 checkDate.setDate(checkDate.getDate() - 1);
             }
             document.getElementById('top-streak').innerText = `🔥 ${streak}`;
+        }
+
+        function openCalendar() {
+            const today = new Date().toISOString().split('T')[0];
+            const area = document.getElementById('picker-options'); area.innerHTML = '';
+            document.getElementById('picker-title').innerText = "History";
+            const grid = document.createElement('div'); grid.className = 'flex flex-wrap';
+            
+            const calView = new Date(activeDate);
+            const y = calView.getFullYear(), m = calView.getMonth();
+            const last = new Date(y, m+1, 0).getDate();
+            
+            for(let i=1; i<=last; i++) {
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                const score = db[ds]?.daily_score || 0;
+                let cls = 'bg-zinc-900';
+                if(ds <= today) {
+                    if(score >= 80) cls = 'day-pass';
+                    else if(score > 0) cls = 'day-fail';
+                }
+                const day = document.createElement('div');
+                day.className = `cal-day ${cls} ${ds===activeDate?'border-2 border-white':''}`;
+                day.innerHTML = `${i}<span class="text-[5px] opacity-50">${ds<=today?score+'%':''}</span>`;
+                day.onclick = () => { activeDate = ds; closeModal('picker-modal'); renderLog(); };
+                grid.appendChild(day);
+            }
+            area.appendChild(grid);
+            document.getElementById('picker-modal').style.display = 'flex';
         }
 
         function setPeriod(p) {
@@ -236,13 +268,9 @@
 
                 let displayVal = '0%';
                 if(loggedDays > 0) {
-                    if(s.type === 'chk' || s.id === 'fast' || s.id === 'journ' || s.id === 'news' || s.id === 'hanuman') {
-                        displayVal = Math.round((count/loggedDays)*100)+'%';
-                    } else if (s.id === 'weight') {
-                        displayVal = sumCount > 0 ? (sum/sumCount).toFixed(1) + (s.unit||'') : '0kg';
-                    } else {
-                        displayVal = sumCount > 0 ? Math.round(sum/loggedDays) + (s.unit||'') : '0';
-                    }
+                    if(s.type === 'chk' || s.id === 'fast') displayVal = Math.round((count/loggedDays)*100)+'%';
+                    else if (s.id === 'weight') displayVal = sumCount > 0 ? (sum/sumCount).toFixed(1) + (s.unit||'') : '0kg';
+                    else displayVal = sumCount > 0 ? Math.round(sum/loggedDays) + (s.unit||'') : '0';
                 }
 
                 grid.innerHTML += `<div class="glass p-6 flex justify-between items-center">
@@ -269,7 +297,7 @@
             const area = document.getElementById('picker-options'); area.innerHTML = '';
             document.getElementById('picker-title').innerText = s.label;
             if(s.type === 'text' || s.type === 'read') {
-                let html = s.type === 'read' ? `<div class="grid grid-cols-4 gap-2 mb-4">${s.options.map(o=>`<div onclick="handlePick('${id}','${o}',false)" class="tag-btn p-2 border rounded-lg text-center ${db[activeDate]?.[id+'_v']==o?'border-green-500 bg-green-500/10':''}"><span>${o}</span></div>`).join('')}</div>` : '';
+                let html = s.type === 'read' ? `<div class="grid grid-cols-4 gap-2 mb-4">${s.options.map(o=>`<div onclick="handlePick('${id}','${o}',false)" class="tag-btn p-2 text-center ${db[activeDate]?.[id+'_v']==o?'border-green-500 bg-green-500/10':''}"><span>${o}</span></div>`).join('')}</div>` : '';
                 area.innerHTML = html + `<textarea id="t-in" class="w-full h-32 bg-zinc-900 border border-white/10 rounded-xl p-4 text-white">${db[activeDate]?.[id+'_v']||''}</textarea>`;
                 document.getElementById('picker-footer').innerHTML = `<button onclick="saveTxt('${id}')" class="w-full py-5 glass text-green-400 font-black">SAVE</button>`;
             } else {
@@ -302,7 +330,6 @@
         function showToast(m) { const t = document.getElementById('toast'); t.style.top = '20px'; setTimeout(()=>t.style.top='-100px',2000); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function shiftDay(n) { let d = new Date(activeDate); d.setDate(d.getDate()+n); activeDate = d.toISOString().split('T')[0]; renderLog(); }
-        function openCalendar() { /* Reuse logic from v39 if needed - omitted for brevity but date buttons work */ }
         function exportData() { const box = document.getElementById('backup-data'); box.value = JSON.stringify(db); box.select(); document.execCommand('copy'); showToast('Backup Copied'); }
         function importData() { const raw = document.getElementById('backup-data').value; if(raw && confirm("Restore data?")) { db = JSON.parse(raw); localStorage.setItem(DB_KEY, JSON.stringify(db)); location.reload(); } }
 
